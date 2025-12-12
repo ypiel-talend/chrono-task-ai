@@ -358,7 +358,30 @@ public class MainController {
     // Inner class for drag and drop cell
     private class TaskListCell extends ListCell<Task> {
 
+        private final HBox hbox = new HBox(10);
+        private final Label label = new Label();
+        private final Label statusLabel = new Label();
+        private final javafx.scene.layout.Region spacer = new javafx.scene.layout.Region(); // Not used in current
+                                                                                            // layout but kept if needed
+                                                                                            // or removed
+
         public TaskListCell() {
+            hbox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+            // Layout configuration
+            label.setMaxWidth(Double.MAX_VALUE);
+            label.setMinWidth(0);
+            HBox.setHgrow(label, Priority.ALWAYS);
+
+            statusLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 10 0 10;");
+            statusLabel.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
+
+            hbox.getChildren().addAll(label, statusLabel);
+
+            // Bind HBox width to Cell width to ensure truncation works
+            // Subtracting logic to account for padding/scrollbars
+            hbox.prefWidthProperty().bind(widthProperty().subtract(20));
+
             setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && getItem() != null) {
                     String url = getItem().getJiraUrl();
@@ -366,6 +389,35 @@ public class MainController {
                         hostServices.showDocument(url);
                     }
                 }
+            });
+
+            // Logic for status label click
+            statusLabel.setOnMouseClicked(e -> {
+                Task item = getItem();
+                if (item != null && item.isJira() && item.getJiraUrl() != null) {
+                    java.lang.String email = settings.getJiraEmail();
+                    java.lang.String token = settings.getJiraApiToken();
+                    if (email != null && !email.isBlank() && token != null && !token.isBlank()) {
+                        statusLabel.setText("Updating...");
+                        jiraService.fetchIssue(item.getJiraUrl(), email, token)
+                                .thenAccept(issue -> {
+                                    javafx.application.Platform.runLater(() -> {
+                                        TaskStatus newStatus = jiraService.mapStatus(issue.status);
+                                        item.setStatus(newStatus);
+                                        statusLabel.setText(newStatus.name());
+                                        taskListView.refresh();
+                                    });
+                                })
+                                .exceptionally(ex -> {
+                                    javafx.application.Platform.runLater(() -> {
+                                        statusLabel.setText(item.getStatus().name());
+                                        showPopup("Jira Error", "Failed to refresh status: " + ex.getMessage());
+                                    });
+                                    return null;
+                                });
+                    }
+                }
+                e.consume();
             });
 
             setOnDragDetected(event -> {
@@ -443,47 +495,8 @@ public class MainController {
                 setGraphic(null);
             } else {
                 setText(null);
-
-                HBox hbox = new HBox();
-                hbox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-                Label label = new Label(item.getLabel());
-                Region spacer = new Region();
-                HBox.setHgrow(spacer, Priority.ALWAYS);
-
-                Label statusLabel = new Label(item.getStatus().name());
-                statusLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 10 0 10;");
-
-                statusLabel.setOnMouseClicked(e -> {
-                    // Update status from Jira
-                    if (item.isJira() && item.getJiraUrl() != null) {
-                        String email = settings.getJiraEmail();
-                        String token = settings.getJiraApiToken();
-                        if (email != null && !email.isBlank() && token != null && !token.isBlank()) {
-                            statusLabel.setText("Updating...");
-                            jiraService.fetchIssue(item.getJiraUrl(), email, token)
-                                    .thenAccept(issue -> {
-                                        javafx.application.Platform.runLater(() -> {
-                                            TaskStatus newStatus = jiraService.mapStatus(issue.status);
-                                            item.setStatus(newStatus);
-                                            // Update UI
-                                            statusLabel.setText(newStatus.name());
-                                            taskListView.refresh();
-                                        });
-                                    })
-                                    .exceptionally(ex -> {
-                                        javafx.application.Platform.runLater(() -> {
-                                            statusLabel.setText(item.getStatus().name());
-                                            showPopup("Jira Error", "Failed to refresh status: " + ex.getMessage());
-                                        });
-                                        return null;
-                                    });
-                        }
-                    }
-                    e.consume();
-                });
-
-                hbox.getChildren().addAll(label, spacer, statusLabel);
+                label.setText(item.getLabel());
+                statusLabel.setText(item.getStatus().name());
                 setGraphic(hbox);
             }
         }
