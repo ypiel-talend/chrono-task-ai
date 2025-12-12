@@ -22,12 +22,12 @@ public class ChronoApp extends Application {
         var storageService = new JsonStorageService("data.json");
         taskService = new TaskService(storageService);
         taskService.init();
-        
+
         timerService = new TimerService();
 
         // 2. Setup Loader with Controller Factory
         FXMLLoader loader = new FXMLLoader(ChronoApp.class.getResource("view/main_view.fxml"));
-        loader.setControllerFactory(param -> new MainController(taskService, timerService));
+        loader.setControllerFactory(param -> new MainController(taskService, timerService, getHostServices()));
 
         // 3. Show UI
         Scene scene = new Scene(loader.load(), 1000, 700);
@@ -39,8 +39,10 @@ public class ChronoApp extends Application {
     @Override
     public void stop() throws Exception {
         super.stop();
-        if (taskService != null) taskService.shutdown();
-        if (timerService != null) timerService.shutdown();
+        if (taskService != null)
+            taskService.shutdown();
+        if (timerService != null)
+            timerService.shutdown();
     }
 
     public static void main(String[] args) {

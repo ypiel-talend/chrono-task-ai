@@ -51,9 +51,13 @@ public class MainController {
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
 
-    public MainController(TaskService taskService, TimerService timerService) {
+    private final javafx.application.HostServices hostServices;
+
+    public MainController(TaskService taskService, TimerService timerService,
+            javafx.application.HostServices hostServices) {
         this.taskService = taskService;
         this.timerService = timerService;
+        this.hostServices = hostServices;
     }
 
     @FXML
@@ -216,6 +220,15 @@ public class MainController {
     private class TaskListCell extends ListCell<Task> {
 
         public TaskListCell() {
+            setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && getItem() != null) {
+                    String url = getItem().getJiraUrl();
+                    if (url != null && !url.isBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
+                        hostServices.showDocument(url);
+                    }
+                }
+            });
+
             setOnDragDetected(event -> {
                 if (getItem() == null) {
                     return;
