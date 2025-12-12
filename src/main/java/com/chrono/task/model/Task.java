@@ -39,7 +39,7 @@ public class Task {
     private List<String> tags = new ArrayList<>();
 
     @Builder.Default
-    private Map<LocalDate, Duration> timeHistory = new HashMap<>();
+    private Map<LocalDate, TaskDailyWork> taskHistory = new HashMap<>();
 
     @Builder.Default
     private String markdownContent = "";
@@ -48,29 +48,42 @@ public class Task {
      * Helper to add time to a specific date.
      */
     public void addTime(LocalDate date, Duration duration) {
-        timeHistory.merge(date, duration, Duration::plus);
+        taskHistory.compute(date, (d, work) -> {
+            if (work == null) {
+                return TaskDailyWork.builder().duration(duration).build();
+            }
+            work.setDuration(work.getDuration().plus(duration));
+            return work;
+        });
     }
 
-
     public void setTime(LocalDate date, Duration duration) {
-        timeHistory.put(date, duration);
+        taskHistory.compute(date, (d, work) -> {
+            if (work == null) {
+                return TaskDailyWork.builder().duration(duration).build();
+            }
+            work.setDuration(duration);
+            return work;
+        });
     }
 
     public Duration getTotalTime() {
-        return timeHistory.values().stream()
+        return taskHistory.values().stream()
+                .map(TaskDailyWork::getDuration)
                 .reduce(Duration.ZERO, Duration::plus);
     }
 
     public Duration getTimeForDate(LocalDate date) {
-        return timeHistory.getOrDefault(date, Duration.ZERO);
+        TaskDailyWork work = taskHistory.get(date);
+        return work != null ? work.getDuration() : Duration.ZERO;
     }
 
     public Duration getDurationLast30Days() {
         LocalDate today = LocalDate.now();
         LocalDate start = today.minusDays(30);
-        return timeHistory.entrySet().stream()
+        return taskHistory.entrySet().stream()
                 .filter(entry -> !entry.getKey().isBefore(start) && !entry.getKey().isAfter(today))
-                .map(Map.Entry::getValue)
+                .map(entry -> entry.getValue().getDuration())
                 .reduce(Duration.ZERO, Duration::plus);
     }
 
@@ -78,10 +91,25 @@ public class Task {
         return getTimeForDate(LocalDate.now());
     }
 
-    public String getLabel(){
+    public String getDailyNote(LocalDate date) {
+        TaskDailyWork work = taskHistory.get(date);
+        return work != null ? work.getNote() : "";
+    }
+
+    public void setDailyNote(LocalDate date, String note) {
+        taskHistory.compute(date, (d, work) -> {
+            if (work == null) {
+                return TaskDailyWork.builder().note(note).build();
+            }
+            work.setNote(note);
+            return work;
+        });
+    }
+
+    public String getLabel() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.getOrder()).append(" - ");
-        if(isJira){
+        if (isJira) {
             sb.append(this.getJiraUrl().substring(this.getJiraUrl().lastIndexOf('/') + 1));
             sb.append(": ");
         }

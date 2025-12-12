@@ -78,10 +78,11 @@
                                             </children>
                                         </HBox>
                                         <Label text="Notes (Markdown)"/>
-                                        <SplitPane dividerPositions="0.5" orientation="VERTICAL" VBox.vgrow="ALWAYS">
+                                        <SplitPane dividerPositions="0.15,0.20" orientation="VERTICAL" VBox.vgrow="ALWAYS">
                                             <items>
+                                                <TextArea fx:id="dailyNoteArea" promptText="Daily note for today..." maxHeight="150"/>
                                                 <TextArea fx:id="markdownEditor" promptText="Type markdown here..."/>
-                                                <WebView fx:id="markdownPreview" prefHeight="200.0" prefWidth="200.0"/>
+                                                <WebView fx:id="markdownPreview"/>
                                             </items>
                                         </SplitPane>
                                     </children>

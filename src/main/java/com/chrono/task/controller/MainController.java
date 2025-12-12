@@ -43,6 +43,8 @@ public class MainController {
     @FXML
     private TextArea markdownEditor;
     @FXML
+    private TextArea dailyNoteArea;
+    @FXML
     private WebView markdownPreview;
 
     // History Tab
@@ -74,10 +76,10 @@ public class MainController {
     private static final String dailyTimerFormat = "Today: %02d:%02d:%02d";;
 
     public MainController(TaskService taskService, TimerService timerService,
-                          com.chrono.task.persistence.SettingsStorageService settingsService,
-                          com.chrono.task.model.Settings settings,
-                          javafx.application.HostServices hostServices,
-                          com.chrono.task.service.JiraService jiraService) {
+            com.chrono.task.persistence.SettingsStorageService settingsService,
+            com.chrono.task.model.Settings settings,
+            javafx.application.HostServices hostServices,
+            com.chrono.task.service.JiraService jiraService) {
         this.taskService = taskService;
         this.timerService = timerService;
         this.settingsService = settingsService;
@@ -131,6 +133,13 @@ public class MainController {
             Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null) {
                 current.setMarkdownContent(n);
+            }
+        });
+
+        dailyNoteArea.textProperty().addListener((obs, o, n) -> {
+            Task current = taskListView.getSelectionModel().getSelectedItem();
+            if (current != null) {
+                current.setDailyNote(LocalDate.now(), n);
             }
         });
 
@@ -229,12 +238,14 @@ public class MainController {
             descriptionField.setText("");
             jiraUrlField.setText("");
             markdownEditor.setText("");
+            dailyNoteArea.setText("");
             markdownPreview.getEngine().loadContent("");
             return;
         }
         descriptionField.setText(task.getDescription());
         jiraUrlField.setText(task.getJiraUrl());
         markdownEditor.setText(task.getMarkdownContent());
+        dailyNoteArea.setText(task.getDailyNote(LocalDate.now()));
         refreshMarkdown(); // Immediate refresh
     }
 
