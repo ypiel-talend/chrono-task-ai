@@ -29,10 +29,12 @@ public class JiraService {
     public static class JiraIssue {
         public String key;
         public String summary;
+        public String status;
 
-        public JiraIssue(String key, String summary) {
+        public JiraIssue(String key, String summary, String status) {
             this.key = key;
             this.summary = summary;
+            this.status = status;
         }
     }
 
@@ -42,8 +44,8 @@ public class JiraService {
         return URL_PATTERN.matcher(url).matches();
     }
 
-    public Optional<IssueInfo> parseUrl(String url){
-        if(url == null){
+    public Optional<IssueInfo> parseUrl(String url) {
+        if (url == null) {
             return Optional.empty();
         }
 
@@ -81,7 +83,8 @@ public class JiraService {
                         try {
                             JsonNode root = objectMapper.readTree(response.body());
                             String summary = root.path("fields").path("summary").asText();
-                            return new JiraIssue(issueInfo.get().issueKey(), summary);
+                            String statusName = root.path("fields").path("status").path("name").asText();
+                            return new JiraIssue(issueInfo.get().issueKey(), summary, statusName);
                         } catch (IOException e) {
                             throw new RuntimeException("Failed to parse Jira response", e);
                         }
@@ -91,7 +94,21 @@ public class JiraService {
                 });
     }
 
-    public record IssueInfo(String url, String domain, String issueKey) {
+    public com.chrono.task.model.TaskStatus mapStatus(String jiraStatus) {
+        if (jiraStatus == null) {
+            return com.chrono.task.model.TaskStatus.UNKNOWN;
+        }
+        String lower = jiraStatus.toLowerCase();
+        return switch (lower) {
+            case "new", "candidate" -> com.chrono.task.model.TaskStatus.TODO;
+            case "on hold", "accepted", "in progress", "code review", "merge" ->
+                com.chrono.task.model.TaskStatus.IN_PROGRESS;
+            case "validation", "final check" -> com.chrono.task.model.TaskStatus.VALIDATION;
+            case "done", "close", "rejected" -> com.chrono.task.model.TaskStatus.DONE;
+            default -> com.chrono.task.model.TaskStatus.UNKNOWN;
+        };
     }
 
+    public record IssueInfo(String url, String domain, String issueKey) {
+    }
 }

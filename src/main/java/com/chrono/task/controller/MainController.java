@@ -13,10 +13,14 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.web.WebView;
 import javafx.util.Duration;
 
 import com.chrono.task.model.Task;
+import com.chrono.task.model.TaskStatus;
 import com.chrono.task.service.JiraService.IssueInfo;
 import com.chrono.task.service.TaskService;
 import com.chrono.task.service.TimerService;
@@ -170,6 +174,7 @@ public class MainController {
                                         try {
                                             taskService.updateTaskDescription(current, issue.key + " " + issue.summary);
                                             taskService.updateTaskJiraUrl(current, n);
+                                            current.setStatus(jiraService.mapStatus(issue.status));
                                         } catch (IllegalArgumentException e) {
                                             showPopup("Validation Error", "Update Failed: " + e.getMessage());
                                             return;
@@ -437,7 +442,49 @@ public class MainController {
                 setText(null);
                 setGraphic(null);
             } else {
-                setText(item.getLabel());
+                setText(null);
+
+                HBox hbox = new HBox();
+                hbox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+                Label label = new Label(item.getLabel());
+                Region spacer = new Region();
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                Label statusLabel = new Label(item.getStatus().name());
+                statusLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 10 0 10;");
+
+                statusLabel.setOnMouseClicked(e -> {
+                    // Update status from Jira
+                    if (item.isJira() && item.getJiraUrl() != null) {
+                        String email = settings.getJiraEmail();
+                        String token = settings.getJiraApiToken();
+                        if (email != null && !email.isBlank() && token != null && !token.isBlank()) {
+                            statusLabel.setText("Updating...");
+                            jiraService.fetchIssue(item.getJiraUrl(), email, token)
+                                    .thenAccept(issue -> {
+                                        javafx.application.Platform.runLater(() -> {
+                                            TaskStatus newStatus = jiraService.mapStatus(issue.status);
+                                            item.setStatus(newStatus);
+                                            // Update UI
+                                            statusLabel.setText(newStatus.name());
+                                            taskListView.refresh();
+                                        });
+                                    })
+                                    .exceptionally(ex -> {
+                                        javafx.application.Platform.runLater(() -> {
+                                            statusLabel.setText(item.getStatus().name());
+                                            showPopup("Jira Error", "Failed to refresh status: " + ex.getMessage());
+                                        });
+                                        return null;
+                                    });
+                        }
+                    }
+                    e.consume();
+                });
+
+                hbox.getChildren().addAll(label, spacer, statusLabel);
+                setGraphic(hbox);
             }
         }
     }
