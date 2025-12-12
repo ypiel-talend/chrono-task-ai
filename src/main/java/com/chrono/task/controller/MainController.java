@@ -47,16 +47,24 @@ public class MainController {
     private TextField descriptionField;
     @FXML
     private TextField jiraUrlField;
+    @FXML
+    private TextField jiraApiTokenField;
 
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
 
     private final javafx.application.HostServices hostServices;
+    private final com.chrono.task.persistence.SettingsStorageService settingsService;
+    private final com.chrono.task.model.Settings settings;
 
     public MainController(TaskService taskService, TimerService timerService,
+            com.chrono.task.persistence.SettingsStorageService settingsService,
+            com.chrono.task.model.Settings settings,
             javafx.application.HostServices hostServices) {
         this.taskService = taskService;
         this.timerService = timerService;
+        this.settingsService = settingsService;
+        this.settings = settings;
         this.hostServices = hostServices;
     }
 
@@ -127,6 +135,33 @@ public class MainController {
         historyDatePicker.setValue(LocalDate.now());
         historyDatePicker.valueProperty().addListener((obs, o, n) -> loadHistory(n));
         loadHistory(LocalDate.now()); // Initial load
+
+        // Settings
+        if (jiraApiTokenField != null) {
+            jiraApiTokenField.setText(settings.getJiraApiToken());
+        }
+    }
+
+    @FXML
+    public void onSaveSettings() {
+        if (jiraApiTokenField != null) {
+            settings.setJiraApiToken(jiraApiTokenField.getText());
+            try {
+                settingsService.save(settings);
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Settings Saved");
+                alert.setHeaderText(null);
+                alert.setContentText("Settings have been saved successfully.");
+                alert.showAndWait();
+            } catch (java.io.IOException e) {
+                e.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Could not save settings");
+                alert.setContentText(e.getMessage());
+                alert.showAndWait();
+            }
+        }
     }
 
     @FXML

@@ -113,6 +113,29 @@
                   </VBox>
                </content>
           </Tab>
+          <Tab text="Settings">
+              <content>
+                  <VBox spacing="20.0">
+                      <children>
+                          <Label text="General Settings">
+                              <font>
+                                  <Font name="System Bold" size="16.0" />
+                              </font>
+                          </Label>
+                          <VBox spacing="5.0">
+                              <children>
+                                  <Label text="Jira API Token:" />
+                                  <TextField fx:id="jiraApiTokenField" promptText="Enter Jira API Token" />
+                              </children>
+                          </VBox>
+                          <Button mnemonicParsing="false" onAction="#onSaveSettings" text="Save Settings" />
+                      </children>
+                      <padding>
+                          <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                      </padding>
+                  </VBox>
+              </content>
+          </Tab>
         </tabs>
       </TabPane>
    </center>

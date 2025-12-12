@@ -25,9 +25,14 @@ public class ChronoApp extends Application {
 
         timerService = new TimerService();
 
+        // 2. Setup Settings
+        var settingsService = new com.chrono.task.persistence.SettingsStorageService();
+        com.chrono.task.model.Settings settings = settingsService.load();
+
         // 2. Setup Loader with Controller Factory
         FXMLLoader loader = new FXMLLoader(ChronoApp.class.getResource("view/main_view.fxml"));
-        loader.setControllerFactory(param -> new MainController(taskService, timerService, getHostServices()));
+        loader.setControllerFactory(
+                param -> new MainController(taskService, timerService, settingsService, settings, getHostServices()));
 
         // 3. Show UI
         Scene scene = new Scene(loader.load(), 1000, 700);
