@@ -24,6 +24,10 @@ public class MainController {
     @FXML
     private Label activeTimerLabel;
     @FXML
+    private Label todayTimerLabel;
+    @FXML
+    private Label monthTimerLabel;
+    @FXML
     private TextField filterField;
     @FXML
     private ListView<Task> taskListView;
@@ -179,8 +183,16 @@ public class MainController {
             java.time.Duration d = current.getTotalTime();
             activeTimerLabel.setText(String.format("%02d:%02d:%02d",
                     d.toHours(), d.toMinutesPart(), d.toSecondsPart()));
+
+            java.time.Duration today = current.getDurationToday();
+            todayTimerLabel.setText(String.format("Today: %dh %02dm", today.toHours(), today.toMinutesPart()));
+
+            java.time.Duration month = current.getDurationLast30Days();
+            monthTimerLabel.setText(String.format("30d: %dh %02dm", month.toHours(), month.toMinutesPart()));
         } else {
             activeTimerLabel.setText("00:00:00");
+            todayTimerLabel.setText("Today: 0h 00m");
+            monthTimerLabel.setText("30d: 0h 00m");
         }
     }
 

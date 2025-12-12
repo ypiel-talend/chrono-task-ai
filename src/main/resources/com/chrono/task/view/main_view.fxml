@@ -30,6 +30,16 @@
                   <Font name="Monospaced Bold" size="24.0" />
                </font>
             </Label>
+            <Label fx:id="todayTimerLabel" text="Today: 0h 00m" textFill="#cccccc">
+               <font>
+                  <Font name="Monospaced Regular" size="14.0" />
+               </font>
+            </Label>
+             <Label fx:id="monthTimerLabel" text="30d: 0h 00m" textFill="#cccccc">
+               <font>
+                  <Font name="Monospaced Regular" size="14.0" />
+               </font>
+            </Label>
          </children>
       </HBox>
    </top>

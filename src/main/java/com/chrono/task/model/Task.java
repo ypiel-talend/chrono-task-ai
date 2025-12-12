@@ -57,4 +57,17 @@ public class Task {
     public Duration getTimeForDate(LocalDate date) {
         return timeHistory.getOrDefault(date, Duration.ZERO);
     }
+
+    public Duration getDurationLast30Days() {
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.minusDays(30);
+        return timeHistory.entrySet().stream()
+                .filter(entry -> !entry.getKey().isBefore(start) && !entry.getKey().isAfter(today))
+                .map(Map.Entry::getValue)
+                .reduce(Duration.ZERO, Duration::plus);
+    }
+
+    public Duration getDurationToday() {
+        return getTimeForDate(LocalDate.now());
+    }
 }
