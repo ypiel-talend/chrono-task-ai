@@ -31,7 +31,7 @@ public class MainController {
     private TextArea markdownEditor;
     @FXML
     private WebView markdownPreview;
-    
+
     // History Tab
     @FXML
     private DatePicker historyDatePicker;
@@ -57,7 +57,7 @@ public class MainController {
         // Bind Task List
         taskListView.setItems(taskService.getTasks());
         taskListView.setCellFactory(param -> new TaskListCell());
-        
+
         // Filter
         filterField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || newVal.isBlank()) {
@@ -91,7 +91,7 @@ public class MainController {
         Timeline markdownTimer = new Timeline(new KeyFrame(Duration.seconds(3), e -> refreshMarkdown()));
         markdownTimer.setCycleCount(Timeline.INDEFINITE);
         markdownTimer.play();
-        
+
         // Editor listeners to update model
         markdownEditor.textProperty().addListener((obs, o, n) -> {
             Task current = taskListView.getSelectionModel().getSelectedItem();
@@ -99,12 +99,19 @@ public class MainController {
                 current.setMarkdownContent(n);
             }
         });
-        
+
         descriptionField.textProperty().addListener((obs, o, n) -> {
-             Task current = taskListView.getSelectionModel().getSelectedItem();
+            Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null) {
                 current.setDescription(n);
                 taskListView.refresh(); // Refresh list to show new name
+            }
+        });
+
+        jiraUrlField.textProperty().addListener((obs, o, n) -> {
+            Task current = taskListView.getSelectionModel().getSelectedItem();
+            if (current != null) {
+                current.setJiraUrl(n);
             }
         });
 
@@ -113,7 +120,7 @@ public class MainController {
         historyDatePicker.valueProperty().addListener((obs, o, n) -> loadHistory(n));
         loadHistory(LocalDate.now()); // Initial load
     }
-    
+
     @FXML
     public void onAddTask() {
         taskService.createTask("New Task " + (taskService.getTasks().size() + 1));
@@ -164,28 +171,30 @@ public class MainController {
     private void updateTimerLabel() {
         Task current = timerService.activeTaskProperty().get();
         if (current != null) {
-            // Re-calculate total time from history including ongoing session is implied by timerService tick
+            // Re-calculate total time from history including ongoing session is implied by
+            // timerService tick
             // Ideally TimerService provides "current session time" + "historical time"
             // But TimerService ticks every second updating the model directly.
             // So we can just read the model.
             java.time.Duration d = current.getTotalTime();
-            activeTimerLabel.setText(String.format("%02d:%02d:%02d", 
-                d.toHours(), d.toMinutesPart(), d.toSecondsPart()));
+            activeTimerLabel.setText(String.format("%02d:%02d:%02d",
+                    d.toHours(), d.toMinutesPart(), d.toSecondsPart()));
         } else {
             activeTimerLabel.setText("00:00:00");
         }
     }
-    
+
     private void loadHistory(LocalDate date) {
-        if (date == null) return;
+        if (date == null)
+            return;
         StringBuilder sb = new StringBuilder();
         sb.append("History for ").append(date).append("\n\n");
-        
+
         for (Task t : taskService.getTasks()) {
             java.time.Duration d = t.getTimeForDate(date);
-            if (!d.isZero()) {
-                 sb.append(String.format("- %s : %02dh %02dm\n", 
-                    t.getDescription(), d.toHours(), d.toMinutesPart()));
+            if (d.getSeconds() > 120) {
+                sb.append(String.format("- %s : %02dh %02dm\n",
+                        t.getDescription(), d.toHours(), d.toMinutesPart()));
             }
         }
         historyTextArea.setText(sb.toString());
@@ -193,7 +202,7 @@ public class MainController {
 
     // Inner class for drag and drop cell
     private class TaskListCell extends ListCell<Task> {
-        
+
         public TaskListCell() {
             setOnDragDetected(event -> {
                 if (getItem() == null) {
@@ -235,7 +244,7 @@ public class MainController {
                     javafx.collections.ObservableList<Task> items = getListView().getItems();
                     int draggedIdx = -1;
                     String draggedId = db.getString();
-                    
+
                     // Find index of dragged item
                     for (int i = 0; i < items.size(); i++) {
                         if (items.get(i).getId().equals(draggedId)) {
@@ -249,7 +258,7 @@ public class MainController {
                     if (draggedIdx != -1 && draggedIdx != thisIdx) {
                         Task itemOffset = items.remove(draggedIdx);
                         items.add(thisIdx, itemOffset);
-                        
+
                         // Update Order in Service
                         taskService.updateOrder(items);
                         success = true;
