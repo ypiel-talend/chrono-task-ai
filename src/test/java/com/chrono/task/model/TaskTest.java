@@ -16,16 +16,16 @@ class TaskTest {
     }
 
     @Test
-    void testAddTime() {
+    void testSetTime() {
         Task task = new Task();
         LocalDate now = LocalDate.now();
-        task.addTime(now, Duration.ofMinutes(10));
+        task.setTime(now, Duration.ofMinutes(10));
 
         assertEquals(10, task.getTimeForDate(now).toMinutes());
         assertEquals(10, task.getTotalTime().toMinutes());
 
-        task.addTime(now, Duration.ofMinutes(5));
-        assertEquals(15, task.getTimeForDate(now).toMinutes());
+        task.setTime(now, Duration.ofMinutes(5));
+        assertEquals(5, task.getTimeForDate(now).toMinutes());
     }
 
     @Test
@@ -34,8 +34,8 @@ class TaskTest {
         LocalDate d1 = LocalDate.of(2023, 1, 1);
         LocalDate d2 = LocalDate.of(2023, 1, 2);
 
-        task.addTime(d1, Duration.ofHours(1));
-        task.addTime(d2, Duration.ofHours(2));
+        task.setTime(d1, Duration.ofHours(1));
+        task.setTime(d2, Duration.ofHours(2));
 
         assertEquals(Duration.ofHours(3), task.getTotalTime());
     }
@@ -47,9 +47,9 @@ class TaskTest {
         LocalDate yesterday = today.minusDays(1);
         LocalDate old = today.minusDays(31);
 
-        task.addTime(today, Duration.ofMinutes(10));
-        task.addTime(yesterday, Duration.ofMinutes(20));
-        task.addTime(old, Duration.ofMinutes(100));
+        task.setTime(today, Duration.ofMinutes(10));
+        task.setTime(yesterday, Duration.ofMinutes(20));
+        task.setTime(old, Duration.ofMinutes(100));
 
         assertEquals(Duration.ofMinutes(10), task.getDurationToday());
         // 10 + 20 = 30. old is 31 days ago, should be excluded.

@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Settings {
     private String jiraApiToken;
+    private String jiraEmail;
 }

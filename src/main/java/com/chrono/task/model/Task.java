@@ -30,6 +30,8 @@ public class Task {
 
     private String jiraUrl;
 
+    private boolean isJira;
+
     @Builder.Default
     private TaskStatus status = TaskStatus.TODO;
 
@@ -47,6 +49,11 @@ public class Task {
      */
     public void addTime(LocalDate date, Duration duration) {
         timeHistory.merge(date, duration, Duration::plus);
+    }
+
+
+    public void setTime(LocalDate date, Duration duration) {
+        timeHistory.put(date, duration);
     }
 
     public Duration getTotalTime() {
@@ -69,5 +76,16 @@ public class Task {
 
     public Duration getDurationToday() {
         return getTimeForDate(LocalDate.now());
+    }
+
+    public String getLabel(){
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.getOrder()).append(" - ");
+        if(isJira){
+            sb.append(this.getJiraUrl().substring(this.getJiraUrl().lastIndexOf('/') + 1));
+            sb.append(": ");
+        }
+        sb.append(this.getDescription());
+        return sb.toString();
     }
 }

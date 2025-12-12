@@ -1,18 +1,27 @@
 package com.chrono.task.controller;
 
+import java.time.LocalDate;
+import java.util.Optional;
+
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.web.WebView;
+import javafx.util.Duration;
+
 import com.chrono.task.model.Task;
+import com.chrono.task.service.JiraService.IssueInfo;
 import com.chrono.task.service.TaskService;
 import com.chrono.task.service.TimerService;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.web.WebView;
-import javafx.util.Duration;
-
-import java.time.LocalDate;
 
 public class MainController {
 
@@ -49,6 +58,8 @@ public class MainController {
     private TextField jiraUrlField;
     @FXML
     private TextField jiraApiTokenField;
+    @FXML
+    private TextField jiraEmailField;
 
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
@@ -56,16 +67,23 @@ public class MainController {
     private final javafx.application.HostServices hostServices;
     private final com.chrono.task.persistence.SettingsStorageService settingsService;
     private final com.chrono.task.model.Settings settings;
+    private final com.chrono.task.service.JiraService jiraService;
+
+    private static final String totalTimerFormat = "Total: %02d:%02d";;
+    private static final String monthlyTimerFormat = "30d: %02d:%02d";;
+    private static final String dailyTimerFormat = "Today: %02d:%02d:%02d";;
 
     public MainController(TaskService taskService, TimerService timerService,
-            com.chrono.task.persistence.SettingsStorageService settingsService,
-            com.chrono.task.model.Settings settings,
-            javafx.application.HostServices hostServices) {
+                          com.chrono.task.persistence.SettingsStorageService settingsService,
+                          com.chrono.task.model.Settings settings,
+                          javafx.application.HostServices hostServices,
+                          com.chrono.task.service.JiraService jiraService) {
         this.taskService = taskService;
         this.timerService = timerService;
         this.settingsService = settingsService;
         this.settings = settings;
         this.hostServices = hostServices;
+        this.jiraService = jiraService;
     }
 
     @FXML
@@ -121,6 +139,39 @@ public class MainController {
             if (current != null) {
                 current.setDescription(n);
                 taskListView.refresh(); // Refresh list to show new name
+
+                // Jira Detection
+                if (jiraService.isJiraUrl(n)) {
+                    String email = settings.getJiraEmail();
+                    String token = settings.getJiraApiToken();
+
+                    if (email != null && !email.isBlank() && token != null && !token.isBlank()) {
+                        jiraService.fetchIssue(n, email, token)
+                                .thenAccept(issue -> {
+                                    javafx.application.Platform.runLater(() -> {
+                                        // Update Model
+                                        current.setDescription(issue.key + " " + issue.summary);
+                                        current.setJiraUrl(n);
+                                        current.setJira(true);
+
+                                        // Update UI
+                                        descriptionField.setText(current.getDescription());
+                                        jiraUrlField.setText(current.getJiraUrl());
+                                        taskListView.refresh();
+                                    });
+                                })
+                                .exceptionally(ex -> {
+                                    javafx.application.Platform.runLater(() -> {
+                                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                                        alert.setTitle("Jira Error");
+                                        alert.setHeaderText("Failed to fetch Jira Issue");
+                                        alert.setContentText(ex.getMessage());
+                                        alert.show();
+                                    });
+                                    return null;
+                                });
+                    }
+                }
             }
         });
 
@@ -128,6 +179,8 @@ public class MainController {
             Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null) {
                 current.setJiraUrl(n);
+                Optional<IssueInfo> issueInfo = jiraService.parseUrl(n);
+                current.setJira(issueInfo.isPresent());
             }
         });
 
@@ -140,27 +193,29 @@ public class MainController {
         if (jiraApiTokenField != null) {
             jiraApiTokenField.setText(settings.getJiraApiToken());
         }
+        if (jiraEmailField != null) {
+            jiraEmailField.setText(settings.getJiraEmail());
+        }
     }
 
     @FXML
     public void onSaveSettings() {
-        if (jiraApiTokenField != null) {
-            settings.setJiraApiToken(jiraApiTokenField.getText());
-            try {
-                settingsService.save(settings);
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Settings Saved");
-                alert.setHeaderText(null);
-                alert.setContentText("Settings have been saved successfully.");
-                alert.showAndWait();
-            } catch (java.io.IOException e) {
-                e.printStackTrace();
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText("Could not save settings");
-                alert.setContentText(e.getMessage());
-                alert.showAndWait();
-            }
+        settings.setJiraApiToken(jiraApiTokenField.getText());
+        settings.setJiraEmail(jiraEmailField.getText());
+        try {
+            settingsService.save(settings);
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Settings Saved");
+            alert.setHeaderText(null);
+            alert.setContentText("Settings have been saved successfully.");
+            alert.showAndWait();
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Could not save settings");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
         }
     }
 
@@ -193,7 +248,7 @@ public class MainController {
             String text = timeAdjustmentField.getText();
             try {
                 long minutes = Long.parseLong(text);
-                current.addTime(LocalDate.now(), java.time.Duration.ofMinutes(minutes));
+                current.setTime(LocalDate.now(), java.time.Duration.ofMinutes(minutes));
                 updateTimerLabel(); // Refresh view immediately
                 timeAdjustmentField.clear();
             } catch (NumberFormatException e) {
@@ -220,18 +275,21 @@ public class MainController {
             // But TimerService ticks every second updating the model directly.
             // So we can just read the model.
             java.time.Duration d = current.getTotalTime();
-            activeTimerLabel.setText(String.format("%02d:%02d:%02d",
+
+            activeTimerLabel.setText(String.format(totalTimerFormat,
                     d.toHours(), d.toMinutesPart(), d.toSecondsPart()));
 
             java.time.Duration today = current.getDurationToday();
-            todayTimerLabel.setText(String.format("Today: %dh %02dm", today.toHours(), today.toMinutesPart()));
+            todayTimerLabel.setText(String.format(dailyTimerFormat,
+                    today.toHours(), today.toMinutesPart(), today.toSecondsPart()));
 
             java.time.Duration month = current.getDurationLast30Days();
-            monthTimerLabel.setText(String.format("30d: %dh %02dm", month.toHours(), month.toMinutesPart()));
+            monthTimerLabel.setText(String.format(monthlyTimerFormat,
+                    month.toHours(), month.toMinutesPart(), month.toSecondsPart()));
         } else {
-            activeTimerLabel.setText("00:00:00");
-            todayTimerLabel.setText("Today: 0h 00m");
-            monthTimerLabel.setText("30d: 0h 00m");
+            activeTimerLabel.setText(String.format(totalTimerFormat, 0, 0));
+            todayTimerLabel.setText(String.format(dailyTimerFormat, 0, 0, 0));
+            monthTimerLabel.setText(String.format(monthlyTimerFormat, 0, 0));
         }
     }
 
@@ -338,7 +396,7 @@ public class MainController {
                 setText(null);
                 setGraphic(null);
             } else {
-                setText(item.getDescription() != null ? item.getDescription() : "Untitled");
+                setText(item.getLabel());
             }
         }
     }

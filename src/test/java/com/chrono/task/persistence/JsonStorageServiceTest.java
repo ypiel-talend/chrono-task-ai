@@ -24,7 +24,7 @@ class JsonStorageServiceTest {
 
         DataStore ds = new DataStore();
         Task t1 = Task.builder().description("Test1").build();
-        t1.addTime(LocalDate.now(), Duration.ofMinutes(30));
+        t1.setTime(LocalDate.now(), Duration.ofMinutes(30));
         ds.getTasks().add(t1);
 
         service.save(ds);

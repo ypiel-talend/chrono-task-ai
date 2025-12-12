@@ -14,6 +14,8 @@ module com.chrono.task {
     requires flexmark.util.sequence;
     requires flexmark.util.visitor;
 
+    requires java.net.http;
+
     opens com.chrono.task to javafx.fxml, javafx.graphics;
     opens com.chrono.task.controller to javafx.fxml;
     opens com.chrono.task.model to com.fasterxml.jackson.databind;
