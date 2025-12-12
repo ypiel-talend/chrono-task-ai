@@ -37,7 +37,7 @@ public class TaskService {
             // Ensure they are sorted by order
             tasks.sort(Comparator.comparingInt(Task::getOrder));
         }
-        
+
         // Schedule auto-save every 30 seconds
         autoSaveScheduler.scheduleAtFixedRate(this::saveSafely, 30, 30, TimeUnit.SECONDS);
     }
@@ -65,8 +65,9 @@ public class TaskService {
         String lowerQuery = query.toLowerCase();
         return tasks.stream()
                 .filter(t -> (t.getDescription() != null && t.getDescription().toLowerCase().contains(lowerQuery)) ||
-                             (t.getJiraUrl() != null && t.getJiraUrl().toLowerCase().contains(lowerQuery)) ||
-                             (t.getTags() != null && t.getTags().stream().anyMatch(tag -> tag.toLowerCase().contains(lowerQuery))))
+                        (t.getJiraUrl() != null && t.getJiraUrl().toLowerCase().contains(lowerQuery)) ||
+                        (t.getTags() != null
+                                && t.getTags().stream().anyMatch(tag -> tag.toLowerCase().contains(lowerQuery))))
                 .collect(Collectors.toList());
     }
 
@@ -74,7 +75,11 @@ public class TaskService {
         for (int i = 0; i < newOrder.size(); i++) {
             newOrder.get(i).setOrder(i);
         }
-        tasks.setAll(newOrder); // Update observable list
+        // If the list is the same instance, we don't need to setAll (it's already
+        // modified in place if it's the ObservableList)
+        if (newOrder != tasks) {
+            tasks.setAll(newOrder); // Update observable list
+        }
     }
 
     public void saveSafely() {
@@ -87,7 +92,7 @@ public class TaskService {
             e.printStackTrace(); // Log error (simple stdout for now)
         }
     }
-    
+
     public void shutdown() {
         autoSaveScheduler.shutdown();
         saveSafely(); // Force save on exit
