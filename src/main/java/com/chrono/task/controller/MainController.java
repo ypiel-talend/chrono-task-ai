@@ -146,7 +146,15 @@ public class MainController {
         descriptionField.textProperty().addListener((obs, o, n) -> {
             Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null) {
-                current.setDescription(n);
+                try {
+                    taskService.updateTaskDescription(current, n);
+                } catch (IllegalArgumentException e) {
+                    showPopup("Validation Error", "Invalid Description: " + e.getMessage());
+                    // Revert the field to the valid value to prevent inconsistency
+                    // runLater to avoid interference with current event processing
+                    javafx.application.Platform.runLater(() -> descriptionField.setText(current.getDescription()));
+                    return;
+                }
                 taskListView.refresh(); // Refresh list to show new name
 
                 // Jira Detection
@@ -159,8 +167,13 @@ public class MainController {
                                 .thenAccept(issue -> {
                                     javafx.application.Platform.runLater(() -> {
                                         // Update Model
-                                        current.setDescription(issue.key + " " + issue.summary);
-                                        current.setJiraUrl(n);
+                                        try {
+                                            taskService.updateTaskDescription(current, issue.key + " " + issue.summary);
+                                            taskService.updateTaskJiraUrl(current, n);
+                                        } catch (IllegalArgumentException e) {
+                                            showPopup("Validation Error", "Update Failed: " + e.getMessage());
+                                            return;
+                                        }
                                         current.setJira(true);
 
                                         // Update UI
@@ -171,11 +184,7 @@ public class MainController {
                                 })
                                 .exceptionally(ex -> {
                                     javafx.application.Platform.runLater(() -> {
-                                        Alert alert = new Alert(Alert.AlertType.ERROR);
-                                        alert.setTitle("Jira Error");
-                                        alert.setHeaderText("Failed to fetch Jira Issue");
-                                        alert.setContentText(ex.getMessage());
-                                        alert.show();
+                                        showPopup("Jira Error", "Failed to fetch Jira Issue: " + ex.getMessage());
                                     });
                                     return null;
                                 });
@@ -187,7 +196,13 @@ public class MainController {
         jiraUrlField.textProperty().addListener((obs, o, n) -> {
             Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null) {
-                current.setJiraUrl(n);
+                try {
+                    taskService.updateTaskJiraUrl(current, n);
+                } catch (IllegalArgumentException e) {
+                    showPopup("Validation Error", "Invalid URL: " + e.getMessage());
+                    javafx.application.Platform.runLater(() -> jiraUrlField.setText(current.getJiraUrl()));
+                    return;
+                }
                 Optional<IssueInfo> issueInfo = jiraService.parseUrl(n);
                 current.setJira(issueInfo.isPresent());
             }
@@ -213,24 +228,39 @@ public class MainController {
         settings.setJiraEmail(jiraEmailField.getText());
         try {
             settingsService.save(settings);
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Settings Saved");
-            alert.setHeaderText(null);
-            alert.setContentText("Settings have been saved successfully.");
-            alert.showAndWait();
+            showPopup("Settings Saved", "Settings have been saved successfully.");
         } catch (java.io.IOException e) {
             e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText("Could not save settings");
-            alert.setContentText(e.getMessage());
-            alert.showAndWait();
+            showPopup("Error", "Could not save settings: " + e.getMessage());
         }
+    }
+
+    private void showPopup(String title, String message) {
+        Alert.AlertType type = Alert.AlertType.INFORMATION;
+        if (title.toLowerCase().contains("error") || message.toLowerCase().contains("failed")
+                || message.toLowerCase().contains("invalid")) {
+            type = Alert.AlertType.ERROR;
+        }
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.show();
     }
 
     @FXML
     public void onAddTask() {
-        taskService.createTask("New Task " + (taskService.getTasks().size() + 1));
+        int index = taskService.getTasks().size() + 1;
+        String name = "New Task " + index;
+        while (true) {
+            try {
+                taskService.createTask(name);
+                break;
+            } catch (IllegalArgumentException e) {
+                index++;
+                name = "New Task " + index;
+            }
+        }
     }
 
     private void loadTaskDetails(Task task) {

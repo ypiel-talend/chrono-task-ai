@@ -67,4 +67,33 @@ class TaskServiceTest {
         assertFalse(service.getTasks().isEmpty(), "Tasks list should not be empty after reordering with itself");
         assertEquals(2, service.getTasks().size());
     }
+
+    @Test
+    void testDuplicateDescriptionOnCreate() {
+        service.createTask("Task A");
+        assertThrows(IllegalArgumentException.class, () -> service.createTask("Task A"));
+    }
+
+    @Test
+    void testDuplicateDescriptionOnUpdate() {
+        Task t1 = service.createTask("Task A");
+        Task t2 = service.createTask("Task B");
+
+        assertThrows(IllegalArgumentException.class, () -> service.updateTaskDescription(t2, "Task A"));
+
+        // Self update should be fine
+        assertDoesNotThrow(() -> service.updateTaskDescription(t1, "Task A"));
+    }
+
+    @Test
+    void testDuplicateJiraUrlOnUpdate() {
+        Task t1 = service.createTask("Task A");
+        service.updateTaskJiraUrl(t1, "http://jira.com/1");
+
+        Task t2 = service.createTask("Task B");
+        assertThrows(IllegalArgumentException.class, () -> service.updateTaskJiraUrl(t2, "http://jira.com/1"));
+
+        // Unique url is fine
+        assertDoesNotThrow(() -> service.updateTaskJiraUrl(t2, "http://jira.com/2"));
+    }
 }

@@ -47,12 +47,31 @@ public class TaskService {
     }
 
     public Task createTask(String description) {
+        if (tasks.stream().anyMatch(t -> t.getDescription().equals(description))) {
+            throw new IllegalArgumentException("Task with description '" + description + "' already exists");
+        }
         Task task = Task.builder()
                 .description(description)
                 .order(tasks.size()) // Append to end
                 .build();
         tasks.add(task);
         return task;
+    }
+
+    public void updateTaskDescription(Task task, String newDescription) {
+        if (tasks.stream()
+                .anyMatch(t -> !t.getId().equals(task.getId()) && t.getDescription().equals(newDescription))) {
+            throw new IllegalArgumentException("Task with description '" + newDescription + "' already exists");
+        }
+        task.setDescription(newDescription);
+    }
+
+    public void updateTaskJiraUrl(Task task, String newUrl) {
+        if (newUrl != null && !newUrl.isBlank()
+                && tasks.stream().anyMatch(t -> !t.getId().equals(task.getId()) && newUrl.equals(t.getJiraUrl()))) {
+            throw new IllegalArgumentException("Task with Jira URL '" + newUrl + "' already exists");
+        }
+        task.setJiraUrl(newUrl);
     }
 
     /**
