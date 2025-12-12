@@ -11,7 +11,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
         <javafx.version>21.0.1</javafx.version>
-        <lombok.version>1.18.36</lombok.version>
+        <lombok.version>1.18.42</lombok.version>
         <jackson.version>2.16.0</jackson.version>
         <flexmark.version>0.64.8</flexmark.version>
         <junit.version>5.10.1</junit.version>
@@ -96,7 +96,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.12.1</version>
+                <version>3.14.1</version>
                 <configuration>
                     <release>25</release>
                     <compilerArgs>
