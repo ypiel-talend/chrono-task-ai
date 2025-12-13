@@ -12,6 +12,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -97,6 +98,7 @@ public class MainController {
     @FXML
     public void initialize() {
         // Bind Task List
+        taskListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         taskListView.setItems(taskService.getTasks());
         taskListView.setCellFactory(param -> new TaskListCell());
 
@@ -495,6 +497,7 @@ public class MainController {
                         items.remove(toMove.get());
                         items.add(getIndex(), toMove.get());
                         taskService.updateOrder(items);
+                        taskListView.getSelectionModel().select(getIndex());
                         success = true;
 
                     }
