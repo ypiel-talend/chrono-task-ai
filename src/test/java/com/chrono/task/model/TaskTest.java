@@ -62,4 +62,34 @@ class TaskTest {
         assertEquals(Duration.ofMinutes(30), task.getDurationLast30Days());
         assertEquals(Duration.ofMinutes(130), task.getTotalTime());
     }
+
+    @Test
+    void testCleanHistory() {
+        Task task = new Task();
+        LocalDate d1 = LocalDate.of(2023, 1, 1);
+        LocalDate d2 = LocalDate.of(2023, 1, 2);
+        LocalDate d3 = LocalDate.of(2023, 1, 3);
+        LocalDate d4 = LocalDate.of(2023, 1, 4);
+
+        // Case 1: Short duration, no note -> Should be removed
+        task.setTime(d1, Duration.ofMinutes(1));
+
+        // Case 2: Long duration, no note -> Should be kept
+        task.setTime(d2, Duration.ofMinutes(3));
+
+        // Case 3: Short duration, with note -> Should be kept
+        task.setTime(d3, Duration.ofMinutes(1));
+        task.setDailyNote(d3, "My note");
+
+        // Case 4: Exactly 2 minutes, no note -> Should be kept (strictly less than 2
+        // removed)
+        task.setTime(d4, Duration.ofMinutes(2));
+
+        task.cleanupHistory();
+
+        assertEquals(Duration.ZERO, task.getTimeForDate(d1)); // Removed
+        assertEquals(Duration.ofMinutes(3), task.getTimeForDate(d2)); // Kept
+        assertEquals(Duration.ofMinutes(1), task.getTimeForDate(d3)); // Kept
+        assertEquals(Duration.ofMinutes(2), task.getTimeForDate(d4)); // Kept
+    }
 }

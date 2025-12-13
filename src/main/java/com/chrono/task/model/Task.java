@@ -116,4 +116,13 @@ public class Task {
         sb.append(this.getDescription());
         return sb.toString();
     }
+
+    public void cleanupHistory() {
+        taskHistory.entrySet().removeIf(entry -> {
+            TaskDailyWork work = entry.getValue();
+            boolean isShort = work.getDuration().compareTo(Duration.ofMinutes(2)) < 0; // Strictly less than 2 minutes
+            boolean hasNoNote = work.getNote() == null || work.getNote().isBlank();
+            return isShort && hasNoNote;
+        });
+    }
 }

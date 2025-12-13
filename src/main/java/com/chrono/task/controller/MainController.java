@@ -1,6 +1,7 @@
 package com.chrono.task.controller;
 
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
 
 import javafx.animation.KeyFrame;
@@ -20,6 +21,7 @@ import javafx.scene.web.WebView;
 import javafx.util.Duration;
 
 import com.chrono.task.model.Task;
+import com.chrono.task.model.TaskDailyWork;
 import com.chrono.task.model.TaskStatus;
 import com.chrono.task.service.JiraService.IssueInfo;
 import com.chrono.task.service.TaskService;
@@ -315,7 +317,9 @@ public class MainController {
                 sb.append("# Daily Notes\n\n");
 
                 current.getTaskHistory().entrySet().stream()
-                        .sorted(java.util.Comparator.comparing(java.util.Map.Entry::getKey))
+                        .sorted(java.util.Comparator.
+                                < Map.Entry < LocalDate, TaskDailyWork >, LocalDate>comparing(java.util.Map.Entry::getKey)
+                                .reversed())
                         .forEach(entry -> {
                             java.time.LocalDate date = entry.getKey();
                             com.chrono.task.model.TaskDailyWork work = entry.getValue();

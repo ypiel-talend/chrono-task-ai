@@ -103,6 +103,9 @@ public class TaskService {
 
     public void saveSafely() {
         try {
+            // Cleanup history for all tasks
+            tasks.forEach(Task::cleanupHistory);
+
             // Create a snapshot to save
             DataStore store = new DataStore(List.copyOf(tasks));
             storageService.save(store);
