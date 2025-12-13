@@ -174,7 +174,7 @@ public class MainController {
                                     javafx.application.Platform.runLater(() -> {
                                         // Update Model
                                         try {
-                                            taskService.updateTaskDescription(current, issue.key + " " + issue.summary);
+                                            taskService.updateTaskDescription(current, issue.summary);
                                             taskService.updateTaskJiraUrl(current, n);
                                             current.setStatus(jiraService.mapStatus(issue.status));
                                         } catch (IllegalArgumentException e) {
