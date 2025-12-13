@@ -317,8 +317,8 @@ public class MainController {
                 sb.append("# Daily Notes\n\n");
 
                 current.getTaskHistory().entrySet().stream()
-                        .sorted(java.util.Comparator.
-                                < Map.Entry < LocalDate, TaskDailyWork >, LocalDate>comparing(java.util.Map.Entry::getKey)
+                        .sorted(java.util.Comparator.<Map.Entry<LocalDate, TaskDailyWork>, LocalDate>comparing(
+                                Map.Entry::getKey)
                                 .reversed())
                         .forEach(entry -> {
                             java.time.LocalDate date = entry.getKey();
@@ -450,12 +450,13 @@ public class MainController {
             });
 
             setOnDragDetected(event -> {
-                if (getItem() == null) {
+                Task toMove = taskListView.getSelectionModel().getSelectedItem();
+                if (toMove == null) {
                     return;
                 }
                 javafx.scene.input.Dragboard dragboard = startDragAndDrop(javafx.scene.input.TransferMode.MOVE);
                 javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
-                content.putString(getItem().getId());
+                content.putString(toMove.getId());
                 dragboard.setContent(content);
                 event.consume();
             });
@@ -487,26 +488,15 @@ public class MainController {
                 boolean success = false;
                 if (db.hasString()) {
                     javafx.collections.ObservableList<Task> items = getListView().getItems();
-                    int draggedIdx = -1;
                     String draggedId = db.getString();
+                    Optional<Task> toMove = items.stream().filter(t -> t.getId().equals(draggedId)).findAny();
 
-                    // Find index of dragged item
-                    for (int i = 0; i < items.size(); i++) {
-                        if (items.get(i).getId().equals(draggedId)) {
-                            draggedIdx = i;
-                            break;
-                        }
-                    }
-
-                    int thisIdx = getIndex();
-
-                    if (draggedIdx != -1 && draggedIdx != thisIdx) {
-                        Task itemOffset = items.remove(draggedIdx);
-                        items.add(thisIdx, itemOffset);
-
-                        // Update Order in Service
+                    if(toMove.isPresent()) {
+                        items.remove(toMove.get());
+                        items.add(getIndex(), toMove.get());
                         taskService.updateOrder(items);
                         success = true;
+
                     }
                 }
                 event.setDropCompleted(success);
