@@ -307,7 +307,32 @@ public class MainController {
     private void refreshMarkdown() {
         Task current = taskListView.getSelectionModel().getSelectedItem();
         if (current != null) {
-            String html = renderer.render(parser.parse(current.getMarkdownContent()));
+            StringBuilder sb = new StringBuilder();
+            sb.append(current.getMarkdownContent());
+
+            if (!current.getTaskHistory().isEmpty()) {
+                sb.append("\n\n---\n\n");
+                sb.append("# Daily Notes\n\n");
+
+                current.getTaskHistory().entrySet().stream()
+                        .sorted(java.util.Comparator.comparing(java.util.Map.Entry::getKey))
+                        .forEach(entry -> {
+                            java.time.LocalDate date = entry.getKey();
+                            com.chrono.task.model.TaskDailyWork work = entry.getValue();
+
+                            java.time.Duration d = work.getDuration();
+                            String durationStr = String.format("%02dh %02dm", d.toHours(), d.toMinutesPart());
+
+                            sb.append("## ").append(date).append(" (").append(durationStr).append(")\n\n");
+                            if (work.getNote() != null && !work.getNote().isBlank()) {
+                                sb.append(work.getNote()).append("\n\n");
+                            } else {
+                                sb.append("*No note*\n\n");
+                            }
+                        });
+            }
+
+            String html = renderer.render(parser.parse(sb.toString()));
             markdownPreview.getEngine().loadContent(html);
         }
     }
