@@ -44,6 +44,8 @@ public class MainController {
     @FXML
     private Label monthTimerLabel;
     @FXML
+    private javafx.scene.control.Button pauseButton;
+    @FXML
     private TextField filterField;
     @FXML
     private ListView<Task> taskListView;
@@ -229,6 +231,15 @@ public class MainController {
         if (jiraEmailField != null) {
             jiraEmailField.setText(settings.getJiraEmail());
         }
+
+        // Bind Pause Button
+        if (pauseButton != null) {
+            pauseButton.disableProperty().bind(timerService.activeTaskProperty().isNull());
+            pauseButton.textProperty().bind(
+                    javafx.beans.binding.Bindings.when(timerService.pausedProperty())
+                            .then("Resume")
+                            .otherwise("Pause"));
+        }
     }
 
     @FXML
@@ -370,6 +381,16 @@ public class MainController {
         }
     }
 
+    @FXML
+    public void onTogglePause() {
+        if (timerService.isPaused()) {
+            timerService.resume();
+        } else {
+            timerService.pause();
+        }
+        updateTimerLabel(); // Immediate UI feedback
+    }
+
     private void loadHistory(LocalDate date) {
         if (date == null)
             return;
@@ -493,7 +514,7 @@ public class MainController {
                     String draggedId = db.getString();
                     Optional<Task> toMove = items.stream().filter(t -> t.getId().equals(draggedId)).findAny();
 
-                    if(toMove.isPresent()) {
+                    if (toMove.isPresent()) {
                         items.remove(toMove.get());
                         items.add(getIndex(), toMove.get());
                         taskService.updateOrder(items);

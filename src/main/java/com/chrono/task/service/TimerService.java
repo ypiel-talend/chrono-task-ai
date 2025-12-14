@@ -16,17 +16,17 @@ public class TimerService {
     private final ObjectProperty<Task> activeTask = new SimpleObjectProperty<>();
     private Instant startTime;
     private final ScheduledExecutorService ticker;
-    
+
     // Allows UI to observe "current session duration" to display ephemeral seconds
     // Or we simply update the task model periodically
-    
+
     public TimerService() {
         this.ticker = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "Timer-Ticker");
             t.setDaemon(true);
             return t;
         });
-        
+
         // Every second, update the active task's time history
         this.ticker.scheduleAtFixedRate(this::tick, 1, 1, TimeUnit.SECONDS);
     }
@@ -44,6 +44,7 @@ public class TimerService {
         // Start new
         activeTask.set(task);
         if (task != null) {
+            paused.set(false);
             startTimer();
         }
     }
@@ -54,7 +55,7 @@ public class TimerService {
 
     private void stopTimer() {
         // Finalize time for the task being stopped
-        tick(); 
+        tick();
         startTime = null;
     }
 
@@ -63,18 +64,42 @@ public class TimerService {
         if (current != null && startTime != null) {
             Instant now = Instant.now();
             Duration sessionDuration = Duration.between(startTime, now);
-            
+
             // We add this small session chunk to the task and reset startTime to now
             // This prevents losing large chunks if crash, and allows real-time update
             current.addTime(LocalDate.now(), sessionDuration);
             startTime = now;
         }
     }
-    
+
     public ObjectProperty<Task> activeTaskProperty() {
         return activeTask;
     }
-    
+
+    private final javafx.beans.property.BooleanProperty paused = new javafx.beans.property.SimpleBooleanProperty(false);
+
+    public javafx.beans.property.BooleanProperty pausedProperty() {
+        return paused;
+    }
+
+    public boolean isPaused() {
+        return paused.get();
+    }
+
+    public void pause() {
+        if (activeTask.get() != null && !isPaused()) {
+            stopTimer();
+            paused.set(true);
+        }
+    }
+
+    public void resume() {
+        if (activeTask.get() != null && isPaused()) {
+            startTimer();
+            paused.set(false);
+        }
+    }
+
     public void shutdown() {
         ticker.shutdown();
         stopTimer();
