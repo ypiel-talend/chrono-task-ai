@@ -2,6 +2,9 @@
 
 A powerful Java 25 + JavaFX Application for daily task management, time tracking, and Jira integration.
 
+The project is called `Chrono Task AI` not because it proposes AI features, but because it has been mostly developed by
+Google Antigravity AI-powered integrated development environment. It is a project to test this tool.
+
 ## Features & Usage
 
 ### 1. Task Management
