@@ -106,6 +106,16 @@ public class Task {
         });
     }
 
+    public String getHistoryLabel(){
+        StringBuilder sb = new StringBuilder();
+        if (this.getJiraUrl() != null && !this.getJiraUrl().isBlank()) {
+            sb.append(this.getJiraUrl());
+            sb.append(": ");
+        }
+        sb.append(this.getDescription());
+        return sb.toString();
+    }
+
     public String getLabel() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.getOrder()).append(" - ");
@@ -122,7 +132,8 @@ public class Task {
             TaskDailyWork work = entry.getValue();
             boolean isShort = work.getDuration().compareTo(Duration.ofMinutes(2)) < 0; // Strictly less than 2 minutes
             boolean hasNoNote = work.getNote() == null || work.getNote().isBlank();
-            return isShort && hasNoNote;
+            boolean isToday = entry.getKey().equals(LocalDate.now());
+            return !isToday && isShort && hasNoNote;
         });
     }
 }

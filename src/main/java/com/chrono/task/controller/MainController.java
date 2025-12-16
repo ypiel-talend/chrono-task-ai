@@ -401,7 +401,7 @@ public class MainController {
             java.time.Duration d = t.getTimeForDate(date);
             if (d.getSeconds() > 120) {
                 sb.append(String.format("- %s : %02dh %02dm\n",
-                        t.getDescription(), d.toHours(), d.toMinutesPart()));
+                        t.getHistoryLabel(), d.toHours(), d.toMinutesPart()));
             }
         }
         historyTextArea.setText(sb.toString());
