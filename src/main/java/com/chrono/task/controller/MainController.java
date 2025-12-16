@@ -391,17 +391,30 @@ public class MainController {
         updateTimerLabel(); // Immediate UI feedback
     }
 
+    @FXML
+    private javafx.scene.control.CheckBox historyDurationCheckbox;
+
+    @FXML
+    public void onRefreshHistory() {
+        loadHistory(historyDatePicker.getValue());
+    }
+
     private void loadHistory(LocalDate date) {
         if (date == null)
             return;
         StringBuilder sb = new StringBuilder();
         sb.append("History for ").append(date).append("\n\n");
 
+        boolean showDuration = historyDurationCheckbox.isSelected();
+
         for (Task t : taskService.getTasks()) {
             java.time.Duration d = t.getTimeForDate(date);
             if (d.getSeconds() > 120) {
-                sb.append(String.format("- %s : %02dh %02dm\n",
-                        t.getHistoryLabel(), d.toHours(), d.toMinutesPart()));
+                sb.append("- ").append(t.getHistoryLabel());
+                if (showDuration) {
+                    sb.append(String.format(" : %02dh %02dm", d.toHours(), d.toMinutesPart()));
+                }
+                sb.append("\n");
             }
         }
         historyTextArea.setText(sb.toString());

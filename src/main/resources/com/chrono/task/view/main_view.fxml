@@ -103,6 +103,12 @@
                                     <children>
                                         <Label text="Select Date:"/>
                                         <DatePicker fx:id="historyDatePicker"/>
+                                        <Button onAction="#onRefreshHistory" text="↻">
+                                            <font>
+                                                <Font size="14.0"/>
+                                            </font>
+                                        </Button>
+                                        <javafx.scene.control.CheckBox fx:id="historyDurationCheckbox" text="with duration" selected="true"/>
                                     </children>
                                 </HBox>
                                 <TextArea fx:id="historyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0"
