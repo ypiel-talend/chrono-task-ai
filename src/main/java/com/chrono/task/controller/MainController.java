@@ -44,6 +44,8 @@ public class MainController {
     @FXML
     private Label monthTimerLabel;
     @FXML
+    private Label totalDailyLabel;
+    @FXML
     private javafx.scene.control.Button pauseButton;
     @FXML
     private TextField filterField;
@@ -378,6 +380,16 @@ public class MainController {
             activeTimerLabel.setText(String.format(totalTimerFormat, 0, 0));
             todayTimerLabel.setText(String.format(dailyTimerFormat, 0, 0, 0));
             monthTimerLabel.setText(String.format(monthlyTimerFormat, 0, 0));
+        }
+
+        // Calculate total duration for today across all tasks
+        java.time.Duration totalToday = java.time.Duration.ZERO;
+        for (Task t : taskService.getTasks()) {
+            totalToday = totalToday.plus(t.getTimeForDate(LocalDate.now()));
+        }
+        if (totalDailyLabel != null) {
+            totalDailyLabel.setText(String.format("Day Total: %02dh %02dm",
+                    totalToday.toHours(), totalToday.toMinutesPart()));
         }
     }
 

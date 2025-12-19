@@ -40,6 +40,11 @@
                         <Font name="Monospaced Regular" size="14.0"/>
                     </font>
                 </Label>
+                <Label fx:id="totalDailyLabel" text="-" textFill="#dddddd">
+                    <font>
+                        <Font name="Monospaced Bold" size="14.0"/>
+                    </font>
+                </Label>
                 <Button fx:id="pauseButton" mnemonicParsing="false" onAction="#onTogglePause" text="Pause" disable="true"/>
             </children>
         </HBox>
