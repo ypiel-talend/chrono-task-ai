@@ -82,9 +82,9 @@ public class MainController {
     private final com.chrono.task.model.Settings settings;
     private final com.chrono.task.service.JiraService jiraService;
 
-    private static final String totalTimerFormat = "Total: %02d:%02d";;
-    private static final String monthlyTimerFormat = "30d: %02d:%02d";;
-    private static final String dailyTimerFormat = "Today: %02d:%02d:%02d";;
+    private static final String totalTimerFormat = "Total: %02d:%02d";
+    private static final String monthlyTimerFormat = "30d: %02d:%02d";
+    private static final String dailyTimerFormat = "Today: %02d:%02d:%02d";
 
     public MainController(TaskService taskService, TimerService timerService,
             com.chrono.task.persistence.SettingsStorageService settingsService,
@@ -224,6 +224,8 @@ public class MainController {
         // History Date Picker
         historyDatePicker.setValue(LocalDate.now());
         historyDatePicker.valueProperty().addListener((obs, o, n) -> loadHistory(n));
+        historyDurationCheckbox.selectedProperty().addListener((obs, o, n) -> onRefreshHistory());
+        historyDailyNoteCheckbox.selectedProperty().addListener((obs, o, n) -> onRefreshHistory());
         loadHistory(LocalDate.now()); // Initial load
 
         // Settings
@@ -407,6 +409,9 @@ public class MainController {
     private javafx.scene.control.CheckBox historyDurationCheckbox;
 
     @FXML
+    private javafx.scene.control.CheckBox historyDailyNoteCheckbox;
+
+    @FXML
     public void onRefreshHistory() {
         loadHistory(historyDatePicker.getValue());
     }
@@ -418,15 +423,23 @@ public class MainController {
         sb.append("History for ").append(date).append("\n\n");
 
         boolean showDuration = historyDurationCheckbox.isSelected();
+        boolean showNotes = historyDailyNoteCheckbox.isSelected();
 
         for (Task t : taskService.getTasks()) {
             java.time.Duration d = t.getTimeForDate(date);
-            if (d.getSeconds() > 120) {
+            if (d.getSeconds() > 120
+                    || (showNotes && t.getDailyNote(date) != null && !t.getDailyNote(date).isBlank())) {
                 sb.append("- ").append(t.getHistoryLabel());
                 if (showDuration) {
                     sb.append(String.format(" : %02dh %02dm", d.toHours(), d.toMinutesPart()));
                 }
                 sb.append("\n");
+                if (showNotes) {
+                    String note = t.getDailyNote(date);
+                    if (note != null && !note.isBlank()) {
+                        sb.append("  > ").append(note.replace("\n", "\n  > ")).append("\n");
+                    }
+                }
             }
         }
         historyTextArea.setText(sb.toString());

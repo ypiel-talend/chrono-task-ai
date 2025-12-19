@@ -113,7 +113,8 @@
                                                 <Font size="14.0"/>
                                             </font>
                                         </Button>
-                                        <javafx.scene.control.CheckBox fx:id="historyDurationCheckbox" text="with duration" selected="true"/>
+                                         <javafx.scene.control.CheckBox fx:id="historyDurationCheckbox" text="with duration" selected="true"/>
+                                         <javafx.scene.control.CheckBox fx:id="historyDailyNoteCheckbox" text="Include daily note" selected="false"/>
                                     </children>
                                 </HBox>
                                 <TextArea fx:id="historyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0"
