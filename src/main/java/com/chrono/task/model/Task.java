@@ -1,5 +1,6 @@
 package com.chrono.task.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -67,6 +68,7 @@ public class Task {
         });
     }
 
+    @JsonIgnore
     public Duration getTotalTime() {
         return taskHistory.values().stream()
                 .map(TaskDailyWork::getDuration)
@@ -78,6 +80,7 @@ public class Task {
         return work != null ? work.getDuration() : Duration.ZERO;
     }
 
+    @JsonIgnore
     public Duration getDurationLast30Days() {
         LocalDate today = LocalDate.now();
         LocalDate start = today.minusDays(30);
@@ -87,6 +90,7 @@ public class Task {
                 .reduce(Duration.ZERO, Duration::plus);
     }
 
+    @JsonIgnore
     public Duration getDurationToday() {
         return getTimeForDate(LocalDate.now());
     }
@@ -106,7 +110,8 @@ public class Task {
         });
     }
 
-    public String getHistoryLabel(){
+    @JsonIgnore
+    public String getHistoryLabel() {
         StringBuilder sb = new StringBuilder();
         if (this.getJiraUrl() != null && !this.getJiraUrl().isBlank()) {
             sb.append(this.getJiraUrl());
@@ -116,6 +121,7 @@ public class Task {
         return sb.toString();
     }
 
+    @JsonIgnore
     public String getLabel() {
         StringBuilder sb = new StringBuilder();
         sb.append(this.getOrder()).append(" - ");
