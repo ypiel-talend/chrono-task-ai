@@ -12,9 +12,11 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -70,7 +72,11 @@ public class MainController {
     @FXML
     private TextField jiraUrlField;
     @FXML
-    private TextField jiraApiTokenField;
+    private PasswordField jiraApiTokenField;
+    @FXML
+    private TextField jiraApiTokenVisibleField;
+    @FXML
+    private ToggleButton tokenVisibilityToggle;
     @FXML
     private TextField jiraEmailField;
 
@@ -231,6 +237,16 @@ public class MainController {
         // Settings
         if (jiraApiTokenField != null) {
             jiraApiTokenField.setText(settings.getJiraApiToken());
+
+            // Sync visible field with password field
+            jiraApiTokenVisibleField.textProperty().bindBidirectional(jiraApiTokenField.textProperty());
+
+            // Toggle visibility based on button state
+            jiraApiTokenField.visibleProperty().bind(tokenVisibilityToggle.selectedProperty().not());
+            jiraApiTokenField.managedProperty().bind(tokenVisibilityToggle.selectedProperty().not());
+
+            jiraApiTokenVisibleField.visibleProperty().bind(tokenVisibilityToggle.selectedProperty());
+            jiraApiTokenVisibleField.managedProperty().bind(tokenVisibilityToggle.selectedProperty());
         }
         if (jiraEmailField != null) {
             jiraEmailField.setText(settings.getJiraEmail());
