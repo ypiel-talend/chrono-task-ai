@@ -8,6 +8,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -466,9 +467,7 @@ public class MainController {
         private final HBox hbox = new HBox(10);
         private final Label label = new Label();
         private final Label statusLabel = new Label();
-        private final javafx.scene.layout.Region spacer = new javafx.scene.layout.Region(); // Not used in current
-                                                                                            // layout but kept if needed
-                                                                                            // or removed
+        private final Button webButton = new Button("🌐");
 
         public TaskListCell() {
             hbox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -481,7 +480,17 @@ public class MainController {
             statusLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 10 0 10;");
             statusLabel.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
 
-            hbox.getChildren().addAll(label, statusLabel);
+            webButton.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 0;");
+            webButton.setFocusTraversable(false);
+            webButton.setOnAction(event -> {
+                Task item = getItem();
+                if (item != null && item.getJiraUrl() != null && !item.getJiraUrl().isBlank()) {
+                    hostServices.showDocument(item.getJiraUrl());
+                }
+                event.consume();
+            });
+
+            hbox.getChildren().addAll(label, statusLabel, webButton);
 
             // Bind HBox width to Cell width to ensure truncation works
             // Subtracting logic to account for padding/scrollbars
@@ -490,10 +499,6 @@ public class MainController {
             setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && getItem() != null) {
                     timerService.setActiveTask(getItem());
-                    String url = getItem().getJiraUrl();
-                    if (url != null && !url.isBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
-                        hostServices.showDocument(url);
-                    }
                 }
             });
 
@@ -594,6 +599,9 @@ public class MainController {
                 setText(null);
                 label.setText(item.getLabel());
                 statusLabel.setText(item.getStatus().name());
+                boolean hasUrl = item.getJiraUrl() != null && !item.getJiraUrl().isBlank();
+                webButton.setVisible(hasUrl);
+                webButton.setManaged(hasUrl);
                 setGraphic(hbox);
             }
         }
