@@ -1,6 +1,8 @@
 package com.chrono.task.service;
 
 import com.chrono.task.model.Task;
+import com.chrono.task.model.TaskDailyWork;
+import java.time.LocalDate;
 import com.chrono.task.persistence.StorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,12 +46,37 @@ class TaskServiceTest {
 
     @Test
     void testFilter() {
-        service.createTask("Buy Milk");
-        service.createTask("Walk Dog");
+        Task t1 = service.createTask("Buy Milk");
+        Task t2 = service.createTask("Walk Dog");
 
+        // Basic description match
         assertEquals(1, service.filter("Milk").size());
+        assertEquals(t1, service.filter("Milk").get(0));
+
+        // Case insensitivity
+        assertEquals(1, service.filter("milk").size());
+
+        // Empty query
         assertEquals(2, service.filter("").size());
+
+        // No match
         assertEquals(0, service.filter("Cat").size());
+
+        // Markdown match
+        t2.setMarkdownContent("Remember to buy poop bags");
+        assertEquals(2, service.filter("buy").size());
+        assertEquals(1, service.filter("bags").size());
+        assertEquals(t2, service.filter("bags").get(0));
+
+        // Daily note match
+        t1.setDailyNote(LocalDate.now(), "Got some organic milk");
+        assertEquals(1, service.filter("organic").size());
+        assertEquals(t1, service.filter("organic").get(0));
+
+        // Jira URL match
+        t2.setJiraUrl("https://jira.example.com/browse/DOG-123");
+        assertEquals(1, service.filter("DOG-123").size());
+        assertEquals(t2, service.filter("DOG-123").get(0));
     }
 
     @Test

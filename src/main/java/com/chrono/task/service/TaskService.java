@@ -85,6 +85,11 @@ public class TaskService {
         return tasks.stream()
                 .filter(t -> (t.getDescription() != null && t.getDescription().toLowerCase().contains(lowerQuery)) ||
                         (t.getJiraUrl() != null && t.getJiraUrl().toLowerCase().contains(lowerQuery)) ||
+                        (t.getMarkdownContent() != null && t.getMarkdownContent().toLowerCase().contains(lowerQuery)) ||
+                        (t.getTaskHistory().values().stream()
+                                .anyMatch(work -> work.getNote() != null
+                                        && work.getNote().toLowerCase().contains(lowerQuery)))
+                        ||
                         (t.getTags() != null
                                 && t.getTags().stream().anyMatch(tag -> tag.toLowerCase().contains(lowerQuery))))
                 .collect(Collectors.toList());
