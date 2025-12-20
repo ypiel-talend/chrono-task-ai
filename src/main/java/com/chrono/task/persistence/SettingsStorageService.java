@@ -13,7 +13,7 @@ public class SettingsStorageService {
 
     public SettingsStorageService() {
         String userHome = System.getProperty("user.home");
-        this.file = new File(userHome, ".chrono-task-ai.json");
+        this.file = new File(userHome, ".chrono-task-ai.settings.json");
         this.mapper = new ObjectMapper();
     }
 
