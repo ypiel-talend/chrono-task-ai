@@ -123,7 +123,6 @@ public class MainController {
 
         // Selection Listener
         taskListView.getSelectionModel().selectedItemProperty().addListener((obs, oldTask, newTask) -> {
-            timerService.setActiveTask(newTask);
             loadTaskDetails(newTask);
         });
 
@@ -490,6 +489,7 @@ public class MainController {
 
             setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && getItem() != null) {
+                    timerService.setActiveTask(getItem());
                     String url = getItem().getJiraUrl();
                     if (url != null && !url.isBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
                         hostServices.showDocument(url);
