@@ -136,7 +136,34 @@
                     <content>
                         <VBox spacing="20.0">
                             <children>
-                                <Label text="General Settings">
+                                <Label text="Data Storage Path:"/>
+                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <children>
+                                        <TextField fx:id="dataStoragePathField" HBox.hgrow="ALWAYS" editable="false"/>
+                                        <Button mnemonicParsing="false" onAction="#onBrowseDataPath" text="Browse..."/>
+                                    </children>
+                                </HBox>
+
+                                <Label text="Git Backup Settings">
+                                    <font>
+                                        <Font name="System Bold" size="16.0"/>
+                                    </font>
+                                </Label>
+                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <children>
+                                        <javafx.scene.control.CheckBox fx:id="gitBackupEnabledCheckbox" text="Enable Git Backup"/>
+                                    </children>
+                                </HBox>
+                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                    <children>
+                                        <Label text="Backup Every:"/>
+                                        <TextField fx:id="gitBackupIntervalField" prefWidth="60.0" promptText="1"/>
+                                        <javafx.scene.control.ComboBox fx:id="gitBackupUnitComboBox"/>
+                                    </children>
+                                </HBox>
+                                <Label fx:id="gitStatusLabel" textFill="RED" visible="false"/>
+
+                                <Label text="Jira Settings">
                                     <font>
                                         <Font name="System Bold" size="16.0"/>
                                     </font>

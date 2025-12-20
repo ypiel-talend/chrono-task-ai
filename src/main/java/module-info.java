@@ -15,6 +15,7 @@ module com.chrono.task {
     requires flexmark.util.visitor;
 
     requires java.net.http;
+    requires java.desktop;
 
     opens com.chrono.task to javafx.fxml, javafx.graphics;
     opens com.chrono.task.controller to javafx.fxml;

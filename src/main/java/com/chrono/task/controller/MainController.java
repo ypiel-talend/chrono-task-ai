@@ -9,6 +9,7 @@ import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -20,7 +21,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.web.WebView;
 import javafx.util.Duration;
 
@@ -81,6 +81,17 @@ public class MainController {
     @FXML
     private TextField jiraEmailField;
 
+    @FXML
+    private TextField dataStoragePathField;
+    @FXML
+    private javafx.scene.control.CheckBox gitBackupEnabledCheckbox;
+    @FXML
+    private TextField gitBackupIntervalField;
+    @FXML
+    private ComboBox<java.time.temporal.ChronoUnit> gitBackupUnitComboBox;
+    @FXML
+    private Label gitStatusLabel;
+
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
 
@@ -88,6 +99,7 @@ public class MainController {
     private final com.chrono.task.persistence.SettingsStorageService settingsService;
     private final com.chrono.task.model.Settings settings;
     private final com.chrono.task.service.JiraService jiraService;
+    private final com.chrono.task.service.GitBackupService gitBackupService;
 
     private static final String totalTimerFormat = "Total: %02d:%02d";
     private static final String monthlyTimerFormat = "30d: %02d:%02d";
@@ -97,13 +109,15 @@ public class MainController {
             com.chrono.task.persistence.SettingsStorageService settingsService,
             com.chrono.task.model.Settings settings,
             javafx.application.HostServices hostServices,
-            com.chrono.task.service.JiraService jiraService) {
+            com.chrono.task.service.JiraService jiraService,
+            com.chrono.task.service.GitBackupService gitBackupService) {
         this.taskService = taskService;
         this.timerService = timerService;
         this.settingsService = settingsService;
         this.settings = settings;
         this.hostServices = hostServices;
         this.jiraService = jiraService;
+        this.gitBackupService = gitBackupService;
     }
 
     @FXML
@@ -252,6 +266,19 @@ public class MainController {
             jiraEmailField.setText(settings.getJiraEmail());
         }
 
+        // Custom Settings
+        if (dataStoragePathField != null) {
+            dataStoragePathField.setText(settings.getDataStoragePath());
+            gitBackupEnabledCheckbox.setSelected(settings.isGitBackupEnabled());
+            gitBackupIntervalField.setText(String.valueOf(settings.getGitBackupInterval()));
+            gitBackupUnitComboBox.getItems().setAll(
+                    java.time.temporal.ChronoUnit.DAYS,
+                    java.time.temporal.ChronoUnit.HOURS,
+                    java.time.temporal.ChronoUnit.MINUTES);
+            gitBackupUnitComboBox.setValue(settings.getGitBackupUnit());
+            updateGitStatusLabel();
+        }
+
         // Bind Pause Button
         if (pauseButton != null) {
             pauseButton.disableProperty().bind(timerService.activeTaskProperty().isNull());
@@ -266,12 +293,57 @@ public class MainController {
     public void onSaveSettings() {
         settings.setJiraApiToken(jiraApiTokenField.getText());
         settings.setJiraEmail(jiraEmailField.getText());
+        settings.setDataStoragePath(dataStoragePathField.getText());
+        settings.setGitBackupEnabled(gitBackupEnabledCheckbox.isSelected());
+        try {
+            settings.setGitBackupInterval(Long.parseLong(gitBackupIntervalField.getText()));
+        } catch (NumberFormatException e) {
+            showPopup("Validation Error", "Invalid Backup Interval: Must be a number.");
+            return;
+        }
+        settings.setGitBackupUnit(gitBackupUnitComboBox.getValue());
+
         try {
             settingsService.save(settings);
+            updateGitStatusLabel();
+            if (gitBackupService != null) {
+                gitBackupService.restart();
+            }
             showPopup("Settings Saved", "Settings have been saved successfully.");
+            // Notify App to possibly restart backup service
+            // This could be improved by using an event system or a direct call if we have
+            // reference to the service
         } catch (java.io.IOException e) {
             e.printStackTrace();
             showPopup("Error", "Could not save settings: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    public void onBrowseDataPath() {
+        javafx.stage.DirectoryChooser directoryChooser = new javafx.stage.DirectoryChooser();
+        directoryChooser.setTitle("Select Data Storage Directory");
+        java.io.File selectedDirectory = directoryChooser.showDialog(dataStoragePathField.getScene().getWindow());
+        if (selectedDirectory != null) {
+            dataStoragePathField.setText(selectedDirectory.getAbsolutePath());
+        }
+    }
+
+    private void updateGitStatusLabel() {
+        if (gitStatusLabel == null)
+            return;
+
+        com.chrono.task.service.GitService gitService = new com.chrono.task.service.GitService();
+        boolean gitInstalled = gitService.isGitInstalled();
+        boolean backupEnabled = gitBackupEnabledCheckbox.isSelected();
+
+        if (backupEnabled && !gitInstalled) {
+            gitStatusLabel.setText("Warning: Git is not installed. Backup feature will not work.");
+            gitStatusLabel.setVisible(true);
+            gitStatusLabel.setManaged(true);
+        } else {
+            gitStatusLabel.setVisible(false);
+            gitStatusLabel.setManaged(false);
         }
     }
 
