@@ -19,6 +19,7 @@ public class ChronoApp extends Application {
     private TaskService taskService;
     private TimerService timerService;
     private GitBackupService gitBackupService;
+    private com.chrono.task.service.NotificationService notificationService;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -46,7 +47,7 @@ public class ChronoApp extends Application {
         timerService = new TimerService();
 
         // 4. Initialize Git Backup
-        var notificationService = new com.chrono.task.service.NotificationService();
+        notificationService = new com.chrono.task.service.NotificationService();
         var gitService = new GitService();
         gitBackupService = new GitBackupService(gitService, settings, notificationService);
         gitBackupService.start();
@@ -69,12 +70,14 @@ public class ChronoApp extends Application {
     @Override
     public void stop() throws Exception {
         super.stop();
-        if (gitBackupService != null)
-            gitBackupService.stop();
         if (taskService != null)
             taskService.shutdown();
         if (timerService != null)
             timerService.shutdown();
+        if (gitBackupService != null)
+            gitBackupService.stop();
+        if (notificationService != null)
+            notificationService.shutdown();
     }
 
     public static void main(String[] args) {

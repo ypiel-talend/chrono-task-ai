@@ -35,4 +35,10 @@ public class NotificationService {
             System.err.println("Notification: [" + title + "] " + message);
         }
     }
+
+    public void shutdown() {
+        if (trayIcon != null && SystemTray.isSupported()) {
+            SystemTray.getSystemTray().remove(trayIcon);
+        }
+    }
 }

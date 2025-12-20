@@ -68,6 +68,10 @@ public class GitBackupService {
     }
 
     public synchronized void stop() {
+        if (settings.isGitBackupEnabled() && gitService.isGitInstalled()) {
+            performBackup();
+        }
+
         if (scheduler != null) {
             scheduler.shutdown();
             try {
