@@ -5,6 +5,8 @@ import java.io.File;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javafx.beans.property.StringProperty;
+import javafx.beans.property.SimpleStringProperty;
 
 public class GitBackupService {
 
@@ -12,11 +14,16 @@ public class GitBackupService {
     private final Settings settings;
     private final NotificationService notificationService;
     private ScheduledExecutorService scheduler;
+    private final StringProperty lastCommitMessage = new SimpleStringProperty();
 
     public GitBackupService(GitService gitService, Settings settings, NotificationService notificationService) {
         this.gitService = gitService;
         this.settings = settings;
         this.notificationService = notificationService;
+    }
+
+    public StringProperty lastCommitMessageProperty() {
+        return lastCommitMessage;
     }
 
     public synchronized void restart() {
@@ -61,7 +68,10 @@ public class GitBackupService {
 
         // Initial init if needed
         try {
-            gitService.initRepository(new File(settings.getDataStoragePath()));
+            File path = new File(settings.getDataStoragePath());
+            gitService.initRepository(path);
+            String lastMsg = gitService.getLastCommitMessage(path);
+            javafx.application.Platform.runLater(() -> lastCommitMessage.set(lastMsg));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -92,6 +102,8 @@ public class GitBackupService {
         try {
             File path = new File(settings.getDataStoragePath());
             gitService.backup(path, "data.json");
+            String lastMsg = gitService.getLastCommitMessage(path);
+            javafx.application.Platform.runLater(() -> lastCommitMessage.set(lastMsg));
         } catch (Exception e) {
             System.err.println("Git backup failed: " + e.getMessage());
         }

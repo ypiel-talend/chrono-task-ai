@@ -1,4 +1,5 @@
 module com.chrono.task {
+    requires transitive javafx.base;
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.graphics;

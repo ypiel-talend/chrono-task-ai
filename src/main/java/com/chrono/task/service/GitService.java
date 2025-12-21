@@ -32,6 +32,29 @@ public class GitService {
         runCommand(path, "git", "commit", "-m", "Backup " + timestamp);
     }
 
+    public String getLastCommitMessage(File path) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder("git", "log", "-1", "--pretty=%B");
+        pb.directory(path);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.isBlank()) {
+                    sb.append(line).append(" ");
+                }
+            }
+        }
+
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            return "No previous commit";
+        }
+        return sb.toString().trim();
+    }
+
     private void runCommand(File workingDir, String... command) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.directory(workingDir);

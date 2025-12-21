@@ -5,8 +5,11 @@ import com.chrono.task.model.Task;
 import com.chrono.task.persistence.StorageService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -19,6 +22,7 @@ public class TaskService {
     private final StorageService storageService;
     private final ObservableList<Task> tasks;
     private final ScheduledExecutorService autoSaveScheduler;
+    private final ObjectProperty<LocalDateTime> lastSaveTime = new SimpleObjectProperty<>();
 
     public TaskService(StorageService storageService) {
         this.storageService = storageService;
@@ -44,6 +48,10 @@ public class TaskService {
 
     public ObservableList<Task> getTasks() {
         return tasks;
+    }
+
+    public ObjectProperty<LocalDateTime> lastSaveTimeProperty() {
+        return lastSaveTime;
     }
 
     public Task createTask(String description) {
@@ -114,7 +122,8 @@ public class TaskService {
             // Create a snapshot to save
             DataStore store = new DataStore(List.copyOf(tasks));
             storageService.save(store);
-            System.out.println("Auto-saved at " + java.time.LocalDateTime.now());
+            javafx.application.Platform.runLater(() -> lastSaveTime.set(LocalDateTime.now()));
+            System.out.println("Auto-saved at " + LocalDateTime.now());
         } catch (IOException e) {
             e.printStackTrace(); // Log error (simple stdout for now)
         }

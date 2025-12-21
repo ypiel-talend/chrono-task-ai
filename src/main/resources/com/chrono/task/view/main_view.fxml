@@ -197,4 +197,21 @@
             </tabs>
         </TabPane>
     </center>
+    <bottom>
+        <HBox alignment="CENTER_LEFT" spacing="15.0" style="-fx-background-color: #222; -fx-padding: 5 10 5 10; -fx-border-color: #444; -fx-border-width: 1 0 0 0;">
+            <children>
+                <HBox HBox.hgrow="ALWAYS" />
+                <Label fx:id="lastSaveLabel" text="Last save: -" textFill="#aaaaaa">
+                    <font>
+                        <Font size="11.0" />
+                    </font>
+                </Label>
+                <Label fx:id="lastCommitLabel" text="Last commit: -" textFill="#aaaaaa">
+                    <font>
+                        <Font size="11.0" />
+                    </font>
+                </Label>
+            </children>
+        </HBox>
+    </bottom>
 </BorderPane>

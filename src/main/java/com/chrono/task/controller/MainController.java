@@ -60,6 +60,10 @@ public class MainController {
     private TextArea dailyNoteArea;
     @FXML
     private WebView markdownPreview;
+    @FXML
+    private Label lastSaveLabel;
+    @FXML
+    private Label lastCommitLabel;
 
     // History Tab
     @FXML
@@ -286,6 +290,30 @@ public class MainController {
                     javafx.beans.binding.Bindings.when(timerService.pausedProperty())
                             .then("Resume")
                             .otherwise("Pause"));
+        }
+
+        // Status Bar Bindings
+        taskService.lastSaveTimeProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                lastSaveLabel.setText(
+                        "Last save: " + newVal.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")));
+            }
+        });
+
+        if (gitBackupService != null) {
+            lastCommitLabel.visibleProperty().bind(gitBackupEnabledCheckbox.selectedProperty());
+            lastCommitLabel.managedProperty().bind(gitBackupEnabledCheckbox.selectedProperty());
+
+            gitBackupService.lastCommitMessageProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    lastCommitLabel.setText("Last commit: " + newVal);
+                }
+            });
+            // Set initial value
+            String lastMsg = gitBackupService.lastCommitMessageProperty().get();
+            if (lastMsg != null) {
+                lastCommitLabel.setText("Last commit: " + lastMsg);
+            }
         }
     }
 
