@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
@@ -83,6 +84,12 @@
                                                 <TextField fx:id="timeAdjustmentField" prefWidth="80.0"
                                                            promptText="min"/>
                                                 <Button mnemonicParsing="false" onAction="#onAdjustTime" text="Apply"/>
+                                            </children>
+                                        </HBox>
+                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label text="Status:"/>
+                                                <ComboBox fx:id="statusComboBox" prefWidth="150.0"/>
                                             </children>
                                         </HBox>
                                         <Label text="Notes (Markdown)"/>

@@ -84,6 +84,8 @@ public class MainController {
     private ToggleButton tokenVisibilityToggle;
     @FXML
     private TextField jiraEmailField;
+    @FXML
+    private ComboBox<TaskStatus> statusComboBox;
 
     @FXML
     private TextField dataStoragePathField;
@@ -250,6 +252,16 @@ public class MainController {
         historyDatePicker.valueProperty().addListener((obs, o, n) -> loadHistory(n));
         historyDurationCheckbox.selectedProperty().addListener((obs, o, n) -> onRefreshHistory());
         historyDailyNoteCheckbox.selectedProperty().addListener((obs, o, n) -> onRefreshHistory());
+        // Status Dropdown
+        statusComboBox.getItems().setAll(TaskStatus.values());
+        statusComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            Task current = taskListView.getSelectionModel().getSelectedItem();
+            if (current != null && newVal != null && current.getStatus() != newVal) {
+                current.setStatus(newVal);
+                taskListView.refresh();
+            }
+        });
+
         loadHistory(LocalDate.now()); // Initial load
 
         // Settings
@@ -409,6 +421,7 @@ public class MainController {
             jiraUrlField.setText("");
             markdownEditor.setText("");
             dailyNoteArea.setText("");
+            statusComboBox.setValue(null);
             markdownPreview.getEngine().loadContent("");
             return;
         }
@@ -416,6 +429,7 @@ public class MainController {
         jiraUrlField.setText(task.getJiraUrl());
         markdownEditor.setText(task.getMarkdownContent());
         dailyNoteArea.setText(task.getDailyNote(LocalDate.now()));
+        statusComboBox.setValue(task.getStatus());
         refreshMarkdown(); // Immediate refresh
     }
 
