@@ -26,27 +26,45 @@ Automatically track how much time you spend on each contest.
 
 ### 3. Jira Integration
 Seamlessly link your local tasks to Jira tickets.
-*   **Configuration**:
-    1.  Go to the **Settings** tab.
-    2.  Enter your **Jira Email** and **API Token**.
-    3.  Click **"Save Settings"**.
 *   **Linking**: Paste a full Jira URL (e.g., `https://company.atlassian.net/browse/PROJ-123`) into the **Jira URL** field or the Task Description.
 *   **Sync**: The app will automatically fetch the Ticket Summary and Status. The Status is displayed as a badge on the task list.
 *   **Refresh**: Click the Status badge on a task to manually refresh its status from Jira.
 
-### 4. Markdown Notes & Documentation
+### 4. Git Integration (Automatic Backup)
+Keep your data safe with automated Git versioning.
+*   **Automatic Backups**: If Git is installed and enabled, the application automatically commits your `data.json` at regular intervals.
+*   **Init Repository**: The app will automatically run `git init` in your data directory if it's not already a repository.
+*   **Status Tracking**: The UI displays the last commit message to confirm backups are working.
+
+### 5. Markdown Notes & Documentation
 Keep detailed context right next to your tasks.
 *   **Markdown Editor**: Use the central text area to write comprehensive documentation for your task.
 *   **Live Preview**: See your Markdown rendered instantly in the WebView panel.
 *   **Daily Notes**: Use the **"Daily note"** field to add specific updates for *today*. These are stored efficiently in the task's history.
 
-### 5. History & Insights
+### 6. History & Insights
 Review your past work.
 *   **Calendar View**: Switch to the **History** tab and select a date from the DatePicker.
 *   **Daily Log**: View a summary of all tasks worked on that day, including durations and daily notes.
 
-### 6. Auto-Save
-*   Never lose your data. The application automatically saves all tasks and history to `data.json` every 30 seconds.
+### 7. Data Persistence
+*   **Auto-Save**: The application automatically saves all tasks and history to `data.json` every 30 seconds.
+
+## Configuration
+
+Detailed settings can be configured in the **Settings** tab. The configuration is stored in `~/.chrono-task-ai.settings.json`.
+
+### Jira Settings
+- **Jira Email**: Your Atlassian account email.
+- **Jira API Token**: An API token generated from your Atlassian account.
+
+### Storage Settings
+- **Data Storage Path**: The directory where `data.json` is stored. Default: `~/.chrono-task-ai/`.
+
+### Git Backup Settings
+- **Enable Git Backup**: Toggle automated Git backups on or off.
+- **Backup Interval**: How often to perform a backup (e.g., every 1 hour).
+- **Backup Unit**: Units for the interval (Minutes, Hours, Days).
 
 ## Architecture
 
@@ -56,18 +74,20 @@ This project follows a clean **MVC (Model-View-Controller)** architecture built 
 
 *   **Model (`com.chrono.task.model`)**:
     *   `Task`: The core entity containing description, history (`TaskDailyWork`), and Jira metadata.
-    *   `Settings`: Stores user configuration (Jira credentials).
+    *   `Settings`: Stores user configuration.
 *   **View (`src/main/resources/.../view`)**:
-    *   `main_view.fxml`: Defines the UI layout (BorderPane, SplitPane, TabPane).
+    *   `main_view.fxml`: Defines the UI layout.
 *   **Controller (`com.chrono.task.controller`)**:
-    *   `MainController`: Handles UI events (clicks, edits, drag-and-drop) and updates the View.
+    *   `MainController`: Handles UI events and updates the View.
 *   **Services (`com.chrono.task.service`)**:
-    *   `TaskService`: Manages the list of tasks, filtering, and CRUD operations.
-    *   `TimerService`: Runs a background thread to update the active task's duration every second.
-    *   `JiraService`: A REST client using `java.net.http` to communicate with the Atlassian API.
+    *   `TaskService`: Manages the list of tasks and CRUD operations.
+    *   `TimerService`: Background thread for time tracking.
+    *   `JiraService`: REST client for Atlassian API.
+    *   `GitService`: Executes Git commands.
+    *   `GitBackupService`: Manages the scheduled backup tasks.
 *   **Persistence (`com.chrono.task.persistence`)**:
-    *   Uses **Jackson** `ObjectMapper` to serialize the entire state to `data.json`.
-    *   `SettingsStorageService` manages specific user settings in `~/.chrono-task-ai.json`.
+    *   `JsonStorageService`: Manages saving/loading the main `data.json`.
+    *   `SettingsStorageService`: Manages `~/.chrono-task-ai.settings.json`.
 
 ### Libraries & Tools
 
@@ -81,6 +101,7 @@ This project follows a clean **MVC (Model-View-Controller)** architecture built 
 
 *   JDK 25
 *   Maven 3.8+
+*   Git (Optional, for backup features)
 
 ## Build & Run
 
