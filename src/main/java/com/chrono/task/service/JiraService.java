@@ -30,11 +30,13 @@ public class JiraService {
         public String key;
         public String summary;
         public String status;
+        public String type;
 
-        public JiraIssue(String key, String summary, String status) {
+        public JiraIssue(String key, String summary, String status, String type) {
             this.key = key;
             this.summary = summary;
             this.status = status;
+            this.type = type;
         }
     }
 
@@ -84,7 +86,8 @@ public class JiraService {
                             JsonNode root = objectMapper.readTree(response.body());
                             String summary = root.path("fields").path("summary").asText();
                             String statusName = root.path("fields").path("status").path("name").asText();
-                            return new JiraIssue(issueInfo.get().issueKey(), summary, statusName);
+                            String typeName = root.path("fields").path("issuetype").path("name").asText();
+                            return new JiraIssue(issueInfo.get().issueKey(), summary, statusName, typeName);
                         } catch (IOException e) {
                             throw new RuntimeException("Failed to parse Jira response", e);
                         }

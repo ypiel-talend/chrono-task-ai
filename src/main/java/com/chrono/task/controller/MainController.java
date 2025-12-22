@@ -69,6 +69,12 @@ public class MainController {
     @FXML
     private DatePicker historyDatePicker;
     @FXML
+    private Label historyEndLabel;
+    @FXML
+    private DatePicker historyEndDatePicker;
+    @FXML
+    private javafx.scene.control.CheckBox historyRangeCheckbox;
+    @FXML
     private TextArea historyTextArea;
 
     // Fields for task details editing
@@ -249,7 +255,9 @@ public class MainController {
 
         // History Date Picker
         historyDatePicker.setValue(LocalDate.now());
-        historyDatePicker.valueProperty().addListener((obs, o, n) -> loadHistory(n));
+        historyDatePicker.valueProperty().addListener((obs, o, n) -> onRefreshHistory());
+        historyEndDatePicker.valueProperty().addListener((obs, o, n) -> onRefreshHistory());
+        historyRangeCheckbox.selectedProperty().addListener((obs, o, n) -> onRefreshHistory());
         historyDurationCheckbox.selectedProperty().addListener((obs, o, n) -> onRefreshHistory());
         historyDailyNoteCheckbox.selectedProperty().addListener((obs, o, n) -> onRefreshHistory());
         // Status Dropdown
@@ -327,6 +335,9 @@ public class MainController {
                 lastCommitLabel.setText("Last commit: " + lastMsg);
             }
         }
+
+        // Initialize End Date Picker
+        historyEndDatePicker.setValue(LocalDate.now());
     }
 
     @FXML
@@ -543,7 +554,11 @@ public class MainController {
 
     @FXML
     public void onRefreshHistory() {
-        loadHistory(historyDatePicker.getValue());
+        if (historyRangeCheckbox.isSelected()) {
+            onGenerateRangeHistory();
+        } else {
+            loadHistory(historyDatePicker.getValue());
+        }
     }
 
     private void loadHistory(LocalDate date) {
@@ -573,6 +588,88 @@ public class MainController {
             }
         }
         historyTextArea.setText(sb.toString());
+    }
+
+    @FXML
+    public void onGenerateRangeHistory() {
+        LocalDate start = historyDatePicker.getValue();
+        LocalDate end = historyEndDatePicker.getValue();
+
+        if (start == null || end == null) {
+            showPopup("Error", "Please select both start and end dates.");
+            return;
+        }
+
+        if (end.isBefore(start)) {
+            showPopup("Error", "End date cannot be before start date.");
+            return;
+        }
+
+        historyTextArea.setText("Generating history... please wait.");
+
+        java.util.List<Task> activeTasks = taskService.getTasks().stream()
+                .filter(t -> {
+                    for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+                        if (t.getTimeForDate(date).getSeconds() > 120) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        if (activeTasks.isEmpty()) {
+            historyTextArea.setText("No tasks found for this date range.");
+            return;
+        }
+
+        String email = settings.getJiraEmail();
+        String token = settings.getJiraApiToken();
+
+        boolean showDuration = historyDurationCheckbox.isSelected();
+        boolean showNotes = historyDailyNoteCheckbox.isSelected();
+
+        java.util.List<java.util.concurrent.CompletableFuture<String>> futures = activeTasks.stream()
+                .map(t -> {
+                    java.time.Duration totalRangeDuration = java.time.Duration.ZERO;
+                    StringBuilder notesBuilder = new StringBuilder();
+                    for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+                        totalRangeDuration = totalRangeDuration.plus(t.getTimeForDate(date));
+                        if (showNotes) {
+                            String note = t.getDailyNote(date);
+                            if (note != null && !note.isBlank()) {
+                                if (notesBuilder.length() > 0) notesBuilder.append("\n");
+                                notesBuilder.append("  > ").append(date).append(": ").append(note.replace("\n", "\n  > "));
+                            }
+                        }
+                    }
+                    final String durationStr = showDuration ? 
+                        String.format(" : %02dh %02dm", totalRangeDuration.toHours(), totalRangeDuration.toMinutesPart()) : "";
+                    final String notesStr = notesBuilder.length() > 0 ? "\n" + notesBuilder.toString() : "";
+
+                    if (t.isJira() && t.getJiraUrl() != null && !t.getJiraUrl().isBlank()
+                            && email != null && !email.isBlank() && token != null && !token.isBlank()) {
+                        return jiraService.fetchIssue(t.getJiraUrl(), email, token)
+                                .thenApply(issue -> String.format("%s\t%s\t%s\t%s%s%s", issue.type, t.getJiraUrl(),
+                                        issue.status, issue.summary, durationStr, notesStr))
+                                .exceptionally(ex -> "Error fetching Jira: " + t.getJiraUrl() + " - " + ex.getMessage() + durationStr + notesStr);
+                    } else {
+                        return java.util.concurrent.CompletableFuture.completedFuture(t.getDescription() + durationStr + notesStr);
+                    }
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        java.util.concurrent.CompletableFuture.allOf(futures.toArray(new java.util.concurrent.CompletableFuture[0]))
+                .thenApply(v -> {
+                    return futures.stream()
+                        .map(java.util.concurrent.CompletableFuture::join)
+                        .collect(java.util.stream.Collectors.joining("\n"));
+                })
+                .thenAccept(report -> javafx.application.Platform.runLater(() -> historyTextArea.setText(report)))
+                .exceptionally(ex -> {
+                    javafx.application.Platform.runLater(() -> showPopup("Error", "Failed to generate report: " + ex.getMessage()));
+                    return null;
+                });
     }
 
     // Inner class for drag and drop cell
