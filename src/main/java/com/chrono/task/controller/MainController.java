@@ -778,13 +778,15 @@ public class MainController {
                                     javafx.application.Platform.runLater(() -> {
                                         TaskStatus newStatus = jiraService.mapStatus(issue.status);
                                         item.setStatus(newStatus);
-                                        statusLabel.setText(newStatus.name());
+                                        boolean showStatus = newStatus != TaskStatus.NONE;
+                                        statusLabel.setText(showStatus ? newStatus.name() : "");
+                                        statusLabel.setVisible(showStatus);
+                                        statusLabel.setManaged(showStatus);
                                         taskListView.refresh();
                                     });
                                 })
                                 .exceptionally(ex -> {
                                     javafx.application.Platform.runLater(() -> {
-                                        statusLabel.setText(item.getStatus().name());
                                         showPopup("Jira Error", "Failed to refresh status: " + ex.getMessage());
                                     });
                                     return null;
@@ -861,7 +863,10 @@ public class MainController {
             } else {
                 setText(null);
                 label.setText(item.getLabel());
-                statusLabel.setText(item.getStatus().name());
+                boolean showStatus = item.getStatus() != TaskStatus.NONE;
+                statusLabel.setText(showStatus ? item.getStatus().name() : "");
+                statusLabel.setVisible(showStatus);
+                statusLabel.setManaged(showStatus);
                 boolean hasUrl = item.getJiraUrl() != null && !item.getJiraUrl().isBlank();
                 webButton.setVisible(hasUrl);
                 webButton.setManaged(hasUrl);
