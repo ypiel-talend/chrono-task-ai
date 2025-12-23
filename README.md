@@ -48,7 +48,7 @@ Review your past work.
 *   **Daily Log**: View a summary of all tasks worked on that day, including durations and daily notes.
 
 ### 7. Data Persistence
-*   **Auto-Save**: The application automatically saves all tasks and history to `data.json` every 30 seconds.
+*   **Auto-Save**: The application automatically saves all tasks and history to `data.json` every 3 minutes.
 
 ## Configuration
 

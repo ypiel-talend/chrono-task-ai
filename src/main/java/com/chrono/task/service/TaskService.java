@@ -42,8 +42,8 @@ public class TaskService {
             tasks.sort(Comparator.comparingInt(Task::getOrder));
         }
 
-        // Schedule auto-save every 30 seconds
-        autoSaveScheduler.scheduleAtFixedRate(this::saveSafely, 30, 30, TimeUnit.SECONDS);
+        // Schedule auto-save every 3 minutes
+        autoSaveScheduler.scheduleAtFixedRate(this::saveSafely, 30, 3, TimeUnit.MINUTES);
     }
 
     public ObservableList<Task> getTasks() {

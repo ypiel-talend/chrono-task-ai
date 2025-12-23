@@ -106,8 +106,8 @@ public class JiraService {
             case "new", "candidate" -> com.chrono.task.model.TaskStatus.TODO;
             case "on hold", "accepted", "in progress", "code review", "merge" ->
                 com.chrono.task.model.TaskStatus.IN_PROGRESS;
-            case "validation", "final check" -> com.chrono.task.model.TaskStatus.VALIDATION;
-            case "done", "close", "rejected" -> com.chrono.task.model.TaskStatus.DONE;
+            case "validation"  -> com.chrono.task.model.TaskStatus.VALIDATION;
+            case "done", "close", "rejected","final check" -> com.chrono.task.model.TaskStatus.DONE;
             default -> com.chrono.task.model.TaskStatus.UNKNOWN;
         };
     }
