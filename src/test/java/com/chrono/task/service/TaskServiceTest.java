@@ -123,4 +123,15 @@ class TaskServiceTest {
         // Unique url is fine
         assertDoesNotThrow(() -> service.updateTaskJiraUrl(t2, "http://jira.com/2"));
     }
+
+    @Test
+    void testSlackUrl() {
+        Task t = service.createTask("Slack Task");
+        service.updateTaskSlackUrl(t, "https://slack.com/archives/C12345");
+        assertEquals("https://slack.com/archives/C12345", t.getSlackUrl());
+
+        // Check filter
+        assertEquals(1, service.filter("archives/C12345").size());
+        assertEquals(t, service.filter("archives/C12345").get(0));
+    }
 }

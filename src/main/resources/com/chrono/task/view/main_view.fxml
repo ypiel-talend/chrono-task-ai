@@ -78,6 +78,7 @@
                                             </font>
                                         </TextField>
                                         <TextField fx:id="jiraUrlField" promptText="Jira URL"/>
+                                        <TextField fx:id="slackUrlField" promptText="Slack URL"/>
                                         <HBox spacing="10.0" alignment="CENTER_LEFT">
                                             <children>
                                                 <Label text="Adjust Time (min):"/>

@@ -31,6 +31,8 @@ public class Task {
 
     private String jiraUrl;
 
+    private String slackUrl;
+
     private boolean isJira;
 
     @Builder.Default

@@ -84,6 +84,8 @@ public class MainController {
     @FXML
     private TextField jiraUrlField;
     @FXML
+    private TextField slackUrlField;
+    @FXML
     private PasswordField jiraApiTokenField;
     @FXML
     private TextField jiraApiTokenVisibleField;
@@ -253,6 +255,13 @@ public class MainController {
                 }
                 Optional<IssueInfo> issueInfo = jiraService.parseUrl(n);
                 current.setJira(issueInfo.isPresent());
+            }
+        });
+
+        slackUrlField.textProperty().addListener((obs, o, n) -> {
+            Task current = taskListView.getSelectionModel().getSelectedItem();
+            if (current != null) {
+                taskService.updateTaskSlackUrl(current, n);
             }
         });
 
@@ -439,6 +448,7 @@ public class MainController {
         if (task == null) {
             descriptionField.setText("");
             jiraUrlField.setText("");
+            slackUrlField.setText("");
             markdownEditor.setText("");
             dailyNoteArea.setText("");
             statusComboBox.setValue(null);
@@ -447,6 +457,7 @@ public class MainController {
         }
         descriptionField.setText(task.getDescription());
         jiraUrlField.setText(task.getJiraUrl());
+        slackUrlField.setText(task.getSlackUrl());
         markdownEditor.setText(task.getMarkdownContent());
         dailyNoteArea.setText(task.getDailyNote(LocalDate.now()));
         statusComboBox.setValue(task.getStatus());
@@ -709,6 +720,7 @@ public class MainController {
         private final Label label = new Label();
         private final Label statusLabel = new Label();
         private final Button webButton = new Button("🌐");
+        private final Button slackButton = new Button("💬");
 
         public TaskListCell() {
             hbox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -718,7 +730,7 @@ public class MainController {
             label.setMinWidth(0);
             HBox.setHgrow(label, Priority.ALWAYS);
 
-            statusLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 10 0 10;");
+            statusLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 0 0 10;");
             statusLabel.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
 
             webButton.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 0;");
@@ -731,7 +743,17 @@ public class MainController {
                 event.consume();
             });
 
-            hbox.getChildren().addAll(label, statusLabel, webButton);
+            slackButton.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 0;");
+            slackButton.setFocusTraversable(false);
+            slackButton.setOnAction(event -> {
+                Task item = getItem();
+                if (item != null && item.getSlackUrl() != null && !item.getSlackUrl().isBlank()) {
+                    hostServices.showDocument(item.getSlackUrl());
+                }
+                event.consume();
+            });
+
+            hbox.getChildren().addAll(label, statusLabel, webButton, slackButton);
 
             // Bind HBox width to Cell width to ensure truncation works
             // Subtracting logic to account for padding/scrollbars
@@ -843,6 +865,9 @@ public class MainController {
                 boolean hasUrl = item.getJiraUrl() != null && !item.getJiraUrl().isBlank();
                 webButton.setVisible(hasUrl);
                 webButton.setManaged(hasUrl);
+                boolean hasSlack = item.getSlackUrl() != null && !item.getSlackUrl().isBlank();
+                slackButton.setVisible(hasSlack);
+                slackButton.setManaged(hasSlack);
                 setGraphic(hbox);
             }
         }

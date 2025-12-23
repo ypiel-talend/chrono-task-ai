@@ -82,6 +82,10 @@ public class TaskService {
         task.setJiraUrl(newUrl);
     }
 
+    public void updateTaskSlackUrl(Task task, String newUrl) {
+        task.setSlackUrl(newUrl);
+    }
+
     /**
      * Filters tasks based on a query string against description, jiraUrl, or tags.
      */
@@ -93,6 +97,7 @@ public class TaskService {
         return tasks.stream()
                 .filter(t -> (t.getDescription() != null && t.getDescription().toLowerCase().contains(lowerQuery)) ||
                         (t.getJiraUrl() != null && t.getJiraUrl().toLowerCase().contains(lowerQuery)) ||
+                        (t.getSlackUrl() != null && t.getSlackUrl().toLowerCase().contains(lowerQuery)) ||
                         (t.getMarkdownContent() != null && t.getMarkdownContent().toLowerCase().contains(lowerQuery)) ||
                         (t.getTaskHistory().values().stream()
                                 .anyMatch(work -> work.getNote() != null
