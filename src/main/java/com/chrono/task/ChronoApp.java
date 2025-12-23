@@ -20,6 +20,7 @@ public class ChronoApp extends Application {
     private TimerService timerService;
     private GitBackupService gitBackupService;
     private com.chrono.task.service.NotificationService notificationService;
+    private com.chrono.task.service.JiraRefreshService jiraRefreshService;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -53,12 +54,14 @@ public class ChronoApp extends Application {
         gitBackupService.start();
 
         var jiraService = new com.chrono.task.service.JiraService();
+        jiraRefreshService = new com.chrono.task.service.JiraRefreshService(jiraService, taskService, settings);
+        jiraRefreshService.start();
 
         // 5. Setup Loader with Controller Factory
         FXMLLoader loader = new FXMLLoader(ChronoApp.class.getResource("view/main_view.fxml"));
         loader.setControllerFactory(
                 param -> new MainController(taskService, timerService, settingsService, settings, getHostServices(),
-                        jiraService, gitBackupService));
+                        jiraService, gitBackupService, jiraRefreshService));
 
         // 6. Show UI
         Scene scene = new Scene(loader.load(), 1000, 700);
@@ -76,6 +79,8 @@ public class ChronoApp extends Application {
             timerService.shutdown();
         if (gitBackupService != null)
             gitBackupService.stop();
+        if (jiraRefreshService != null)
+            jiraRefreshService.stop();
         if (notificationService != null)
             notificationService.shutdown();
     }

@@ -108,6 +108,14 @@ public class MainController {
     private ComboBox<String> markdownFontComboBox;
     @FXML
     private Label gitStatusLabel;
+    @FXML
+    private javafx.scene.control.CheckBox jiraRefreshEnabledCheckbox;
+    @FXML
+    private TextField jiraRefreshIntervalField;
+    @FXML
+    private ComboBox<java.time.temporal.ChronoUnit> jiraRefreshUnitComboBox;
+    @FXML
+    private Label jiraUpdateLabel;
 
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
@@ -117,6 +125,7 @@ public class MainController {
     private final com.chrono.task.model.Settings settings;
     private final com.chrono.task.service.JiraService jiraService;
     private final com.chrono.task.service.GitBackupService gitBackupService;
+    private final com.chrono.task.service.JiraRefreshService jiraRefreshService;
 
     private static final String totalTimerFormat = "Total: %02d:%02d";
     private static final String monthlyTimerFormat = "30d: %02d:%02d";
@@ -127,7 +136,8 @@ public class MainController {
             com.chrono.task.model.Settings settings,
             javafx.application.HostServices hostServices,
             com.chrono.task.service.JiraService jiraService,
-            com.chrono.task.service.GitBackupService gitBackupService) {
+            com.chrono.task.service.GitBackupService gitBackupService,
+            com.chrono.task.service.JiraRefreshService jiraRefreshService) {
         this.taskService = taskService;
         this.timerService = timerService;
         this.settingsService = settingsService;
@@ -135,6 +145,7 @@ public class MainController {
         this.hostServices = hostServices;
         this.jiraService = jiraService;
         this.gitBackupService = gitBackupService;
+        this.jiraRefreshService = jiraRefreshService;
     }
 
     @FXML
@@ -301,6 +312,24 @@ public class MainController {
         if (jiraEmailField != null) {
             jiraEmailField.setText(settings.getJiraEmail());
         }
+        if (jiraRefreshEnabledCheckbox != null) {
+            jiraRefreshEnabledCheckbox.setSelected(settings.isJiraRefreshEnabled());
+        }
+        if (jiraRefreshIntervalField != null) {
+            jiraRefreshIntervalField.setText(String.valueOf(settings.getJiraRefreshInterval()));
+        }
+        if (jiraRefreshUnitComboBox != null) {
+            jiraRefreshUnitComboBox.getItems().setAll(
+                    java.time.temporal.ChronoUnit.HOURS,
+                    java.time.temporal.ChronoUnit.MINUTES,
+                    java.time.temporal.ChronoUnit.SECONDS);
+            jiraRefreshUnitComboBox.setValue(settings.getJiraRefreshUnit());
+        }
+
+        if (jiraUpdateLabel != null && jiraRefreshService != null) {
+            jiraUpdateLabel.visibleProperty().bind(jiraRefreshService.isRefreshingProperty());
+            jiraUpdateLabel.managedProperty().bind(jiraRefreshService.isRefreshingProperty());
+        }
 
         // Custom Settings
         if (dataStoragePathField != null) {
@@ -372,11 +401,23 @@ public class MainController {
         settings.setGitBackupUnit(gitBackupUnitComboBox.getValue());
         settings.setMarkdownFont(markdownFontComboBox.getValue());
 
+        settings.setJiraRefreshEnabled(jiraRefreshEnabledCheckbox.isSelected());
+        try {
+            settings.setJiraRefreshInterval(Long.parseLong(jiraRefreshIntervalField.getText()));
+        } catch (NumberFormatException e) {
+            showPopup("Validation Error", "Invalid Jira Refresh Interval: Must be a number.");
+            return;
+        }
+        settings.setJiraRefreshUnit(jiraRefreshUnitComboBox.getValue());
+
         try {
             settingsService.save(settings);
             updateGitStatusLabel();
             if (gitBackupService != null) {
                 gitBackupService.restart();
+            }
+            if (jiraRefreshService != null) {
+                jiraRefreshService.restart();
             }
             showPopup("Settings Saved", "Settings have been saved successfully.");
             // Notify App to possibly restart backup service

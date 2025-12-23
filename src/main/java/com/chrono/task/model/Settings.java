@@ -16,5 +16,10 @@ public class Settings {
     private long gitBackupInterval = 1;
     private ChronoUnit gitBackupUnit = ChronoUnit.HOURS;
     private boolean gitBackupEnabled = false;
+
+    private long jiraRefreshInterval = 15;
+    private ChronoUnit jiraRefreshUnit = ChronoUnit.MINUTES;
+    private boolean jiraRefreshEnabled = false;
+
     private String markdownFont = "System";
 }
