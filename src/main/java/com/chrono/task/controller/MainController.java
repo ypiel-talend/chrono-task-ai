@@ -22,6 +22,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.web.WebView;
+import javafx.scene.text.Font;
 import javafx.util.Duration;
 
 import com.chrono.task.model.Task;
@@ -101,6 +102,8 @@ public class MainController {
     private TextField gitBackupIntervalField;
     @FXML
     private ComboBox<java.time.temporal.ChronoUnit> gitBackupUnitComboBox;
+    @FXML
+    private ComboBox<String> markdownFontComboBox;
     @FXML
     private Label gitStatusLabel;
 
@@ -303,6 +306,11 @@ public class MainController {
             updateGitStatusLabel();
         }
 
+        if (markdownFontComboBox != null) {
+            markdownFontComboBox.getItems().setAll(Font.getFamilies());
+            markdownFontComboBox.setValue(settings.getMarkdownFont());
+        }
+
         // Bind Pause Button
         if (pauseButton != null) {
             pauseButton.disableProperty().bind(timerService.activeTaskProperty().isNull());
@@ -353,6 +361,7 @@ public class MainController {
             return;
         }
         settings.setGitBackupUnit(gitBackupUnitComboBox.getValue());
+        settings.setMarkdownFont(markdownFontComboBox.getValue());
 
         try {
             settingsService.save(settings);
@@ -495,7 +504,21 @@ public class MainController {
             }
 
             String html = renderer.render(parser.parse(sb.toString()));
-            markdownPreview.getEngine().loadContent(html);
+
+            String fontBox = settings.getMarkdownFont();
+            String fontFamily = (fontBox == null || "System".equals(fontBox)) ? "sans-serif" : "'" + fontBox + "'";
+
+            String styledHtml = "<html><head><style>" +
+                    "body { font-family: " + fontFamily
+                    + "; font-size: 14px; line-height: 1.6; color: #333; padding: 20px; }" +
+                    "code { font-family: monospace; background-color: #f4f4f4; padding: 2px 4px; border-radius: 4px; }"
+                    +
+                    "pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }" +
+                    "h1, h2, h3 { border-bottom: 1px solid #eee; padding-bottom: 5px; }" +
+                    "blockquote { border-left: 4px solid #ddd; padding-left: 15px; color: #777; }" +
+                    "</style></head><body>" + html + "</body></html>";
+
+            markdownPreview.getEngine().loadContent(styledHtml);
         }
     }
 
@@ -638,13 +661,17 @@ public class MainController {
                         if (showNotes) {
                             String note = t.getDailyNote(date);
                             if (note != null && !note.isBlank()) {
-                                if (notesBuilder.length() > 0) notesBuilder.append("\n");
-                                notesBuilder.append("  > ").append(date).append(": ").append(note.replace("\n", "\n  > "));
+                                if (notesBuilder.length() > 0)
+                                    notesBuilder.append("\n");
+                                notesBuilder.append("  > ").append(date).append(": ")
+                                        .append(note.replace("\n", "\n  > "));
                             }
                         }
                     }
-                    final String durationStr = showDuration ? 
-                        String.format(" : %02dh %02dm", totalRangeDuration.toHours(), totalRangeDuration.toMinutesPart()) : "";
+                    final String durationStr = showDuration
+                            ? String.format(" : %02dh %02dm", totalRangeDuration.toHours(),
+                                    totalRangeDuration.toMinutesPart())
+                            : "";
                     final String notesStr = notesBuilder.length() > 0 ? "\n" + notesBuilder.toString() : "";
 
                     if (t.isJira() && t.getJiraUrl() != null && !t.getJiraUrl().isBlank()
@@ -652,9 +679,11 @@ public class MainController {
                         return jiraService.fetchIssue(t.getJiraUrl(), email, token)
                                 .thenApply(issue -> String.format("%s\t%s\t%s\t%s%s%s", issue.type, t.getJiraUrl(),
                                         issue.status, issue.summary, durationStr, notesStr))
-                                .exceptionally(ex -> "Error fetching Jira: " + t.getJiraUrl() + " - " + ex.getMessage() + durationStr + notesStr);
+                                .exceptionally(ex -> "Error fetching Jira: " + t.getJiraUrl() + " - " + ex.getMessage()
+                                        + durationStr + notesStr);
                     } else {
-                        return java.util.concurrent.CompletableFuture.completedFuture(t.getDescription() + durationStr + notesStr);
+                        return java.util.concurrent.CompletableFuture
+                                .completedFuture(t.getDescription() + durationStr + notesStr);
                     }
                 })
                 .collect(java.util.stream.Collectors.toList());
@@ -662,12 +691,13 @@ public class MainController {
         java.util.concurrent.CompletableFuture.allOf(futures.toArray(new java.util.concurrent.CompletableFuture[0]))
                 .thenApply(v -> {
                     return futures.stream()
-                        .map(java.util.concurrent.CompletableFuture::join)
-                        .collect(java.util.stream.Collectors.joining("\n"));
+                            .map(java.util.concurrent.CompletableFuture::join)
+                            .collect(java.util.stream.Collectors.joining("\n"));
                 })
                 .thenAccept(report -> javafx.application.Platform.runLater(() -> historyTextArea.setText(report)))
                 .exceptionally(ex -> {
-                    javafx.application.Platform.runLater(() -> showPopup("Error", "Failed to generate report: " + ex.getMessage()));
+                    javafx.application.Platform
+                            .runLater(() -> showPopup("Error", "Failed to generate report: " + ex.getMessage()));
                     return null;
                 });
     }
