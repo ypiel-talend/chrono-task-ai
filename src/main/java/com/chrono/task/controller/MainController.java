@@ -532,27 +532,30 @@ public class MainController {
             sb.append(current.getMarkdownContent());
 
             if (!current.getTaskHistory().isEmpty()) {
-                sb.append("\n\n---\n\n");
-                sb.append("# Daily Notes\n\n");
-
-                current.getTaskHistory().entrySet().stream()
+                // Filter entries that have non-empty notes
+                java.util.List<Map.Entry<LocalDate, TaskDailyWork>> notesWithContent = current.getTaskHistory().entrySet().stream()
+                        .filter(entry -> entry.getValue().getNote() != null && !entry.getValue().getNote().isBlank())
                         .sorted(java.util.Comparator.<Map.Entry<LocalDate, TaskDailyWork>, LocalDate>comparing(
                                 Map.Entry::getKey)
                                 .reversed())
-                        .forEach(entry -> {
-                            java.time.LocalDate date = entry.getKey();
-                            com.chrono.task.model.TaskDailyWork work = entry.getValue();
+                        .collect(java.util.stream.Collectors.toList());
 
-                            java.time.Duration d = work.getDuration();
-                            String durationStr = String.format("%02dh %02dm", d.toHours(), d.toMinutesPart());
+                // Only add the section if there are notes with content
+                if (!notesWithContent.isEmpty()) {
+                    sb.append("\n\n---\n\n");
+                    sb.append("# Daily Notes\n\n");
 
-                            sb.append("## ").append(date).append(" (").append(durationStr).append(")\n\n");
-                            if (work.getNote() != null && !work.getNote().isBlank()) {
-                                sb.append(work.getNote()).append("\n\n");
-                            } else {
-                                sb.append("*No note*\n\n");
-                            }
-                        });
+                    notesWithContent.forEach(entry -> {
+                        java.time.LocalDate date = entry.getKey();
+                        com.chrono.task.model.TaskDailyWork work = entry.getValue();
+
+                        java.time.Duration d = work.getDuration();
+                        String durationStr = String.format("%02dh %02dm", d.toHours(), d.toMinutesPart());
+
+                        sb.append("## ").append(date).append(" (").append(durationStr).append(")\n\n");
+                        sb.append(work.getNote()).append("\n\n");
+                    });
+                }
             }
 
             String html = renderer.render(parser.parse(sb.toString()));
