@@ -230,6 +230,8 @@
                         </VBox>
                     </content>
                 </Tab>
+                <Tab text="Scheduling" fx:id="schedulingTab">
+                </Tab>
             </tabs>
         </TabPane>
     </center>

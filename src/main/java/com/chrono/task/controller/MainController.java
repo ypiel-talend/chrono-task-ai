@@ -119,6 +119,9 @@ public class MainController {
     @FXML
     private Label jiraUpdateLabel;
 
+    @FXML
+    private javafx.scene.control.Tab schedulingTab;
+
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
 
@@ -128,6 +131,7 @@ public class MainController {
     private final com.chrono.task.service.JiraService jiraService;
     private final com.chrono.task.service.GitBackupService gitBackupService;
     private final com.chrono.task.service.JiraRefreshService jiraRefreshService;
+    private final com.chrono.task.service.SchedulingService schedulingService;
 
     private static final String totalTimerFormat = "Total: %02d:%02d";
     private static final String monthlyTimerFormat = "30d: %02d:%02d";
@@ -139,7 +143,8 @@ public class MainController {
             javafx.application.HostServices hostServices,
             com.chrono.task.service.JiraService jiraService,
             com.chrono.task.service.GitBackupService gitBackupService,
-            com.chrono.task.service.JiraRefreshService jiraRefreshService) {
+            com.chrono.task.service.JiraRefreshService jiraRefreshService,
+            com.chrono.task.service.SchedulingService schedulingService) {
         this.taskService = taskService;
         this.timerService = timerService;
         this.settingsService = settingsService;
@@ -148,6 +153,7 @@ public class MainController {
         this.jiraService = jiraService;
         this.gitBackupService = gitBackupService;
         this.jiraRefreshService = jiraRefreshService;
+        this.schedulingService = schedulingService;
     }
 
     @FXML
@@ -380,6 +386,21 @@ public class MainController {
 
         // Initialize End Date Picker
         historyEndDatePicker.setValue(LocalDate.now());
+
+        // Load Scheduling Tab
+        if (schedulingTab != null && schedulingService != null) {
+            try {
+                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                    getClass().getResource("/com/chrono/task/view/scheduling_view.fxml")
+                );
+                loader.setControllerFactory(param -> new com.chrono.task.controller.SchedulingController(schedulingService));
+                javafx.scene.Parent schedulingView = loader.load();
+                schedulingTab.setContent(schedulingView);
+            } catch (Exception e) {
+                log.error("Failed to load Scheduling tab", e);
+                showPopup("Error", "Failed to load Scheduling tab: " + e.getMessage());
+            }
+        }
     }
 
     @FXML

@@ -21,6 +21,7 @@ public class ChronoApp extends Application {
     private GitBackupService gitBackupService;
     private com.chrono.task.service.NotificationService notificationService;
     private com.chrono.task.service.JiraRefreshService jiraRefreshService;
+    private com.chrono.task.service.SchedulingService schedulingService;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -60,13 +61,19 @@ public class ChronoApp extends Application {
         jiraRefreshService = new com.chrono.task.service.JiraRefreshService(jiraService, taskService, settings);
         jiraRefreshService.start();
 
-        // 5. Setup Loader with Controller Factory
+        // 5. Initialize Scheduling Service
+        String schedulingFilePath = new File(dataDir, "scheduling.json").getAbsolutePath();
+        var schedulingStorageService = new com.chrono.task.persistence.SchedulingStorageService(schedulingFilePath);
+        schedulingService = new com.chrono.task.service.SchedulingService(schedulingStorageService, notificationService);
+        schedulingService.init();
+
+        // 6. Setup Loader with Controller Factory
         FXMLLoader loader = new FXMLLoader(ChronoApp.class.getResource("view/main_view.fxml"));
         loader.setControllerFactory(
                 param -> new MainController(taskService, timerService, settingsService, settings, getHostServices(),
-                        jiraService, gitBackupService, jiraRefreshService));
+                        jiraService, gitBackupService, jiraRefreshService, schedulingService));
 
-        // 6. Show UI
+        // 7. Show UI
         Scene scene = new Scene(loader.load(), 1000, 700);
         stage.setScene(scene);
         stage.setTitle("Chrono Task AI");
@@ -84,6 +91,8 @@ public class ChronoApp extends Application {
             gitBackupService.stop();
         if (jiraRefreshService != null)
             jiraRefreshService.stop();
+        if (schedulingService != null)
+            schedulingService.shutdown();
         if (notificationService != null)
             notificationService.shutdown();
     }
