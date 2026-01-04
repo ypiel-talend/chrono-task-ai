@@ -7,7 +7,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javafx.beans.property.StringProperty;
 import javafx.beans.property.SimpleStringProperty;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class GitBackupService {
 
     private final GitService gitService;
@@ -59,7 +61,6 @@ public class GitBackupService {
         long interval = settings.getGitBackupInterval();
         TimeUnit unit = switch (settings.getGitBackupUnit()) {
             case DAYS -> TimeUnit.DAYS;
-            case HOURS -> TimeUnit.HOURS;
             case MINUTES -> TimeUnit.MINUTES;
             default -> TimeUnit.HOURS;
         };
@@ -73,7 +74,7 @@ public class GitBackupService {
             String lastMsg = gitService.getLastCommitMessage(path);
             javafx.application.Platform.runLater(() -> lastCommitMessage.set(lastMsg));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to initialize git repository", e);
         }
     }
 
@@ -105,7 +106,7 @@ public class GitBackupService {
             String lastMsg = gitService.getLastCommitMessage(path);
             javafx.application.Platform.runLater(() -> lastCommitMessage.set(lastMsg));
         } catch (Exception e) {
-            System.err.println("Git backup failed: " + e.getMessage());
+            log.error("Git backup failed", e);
         }
     }
 }

@@ -48,7 +48,6 @@ public class JiraRefreshService {
 
         TimeUnit timeUnit = switch (settings.getJiraRefreshUnit()) {
             case SECONDS -> TimeUnit.SECONDS;
-            case MINUTES -> TimeUnit.MINUTES;
             case HOURS -> TimeUnit.HOURS;
             default -> TimeUnit.MINUTES;
         };
@@ -95,7 +94,7 @@ public class JiraRefreshService {
                 var future = jiraService
                         .fetchIssue(task.getJiraUrl(), settings.getJiraEmail(), settings.getJiraApiToken())
                         .thenAccept(issue -> {
-                            TaskStatus newStatus = jiraService.mapStatus(issue.status);
+                            TaskStatus newStatus = jiraService.mapStatus(issue.status());
                             if (newStatus != task.getStatus()) {
                                 Platform.runLater(() -> {
                                     task.setStatus(newStatus);

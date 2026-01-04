@@ -8,12 +8,7 @@ module com.chrono.task {
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.datatype.jsr310;
     requires flexmark;
-    requires flexmark.util.data;
-    requires flexmark.util.ast;
-    requires flexmark.util.builder;
-    requires flexmark.util.misc;
-    requires flexmark.util.sequence;
-    requires flexmark.util.visitor;
+    requires org.slf4j;
 
     requires java.net.http;
     requires java.desktop;
@@ -21,6 +16,7 @@ module com.chrono.task {
     opens com.chrono.task to javafx.fxml, javafx.graphics;
     opens com.chrono.task.controller to javafx.fxml;
     opens com.chrono.task.model to com.fasterxml.jackson.databind;
+    opens com.chrono.task.persistence to com.fasterxml.jackson.databind;
 
     exports com.chrono.task;
     exports com.chrono.task.controller;

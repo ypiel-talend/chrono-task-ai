@@ -33,7 +33,7 @@ class JsonStorageServiceTest {
 
         DataStore loaded = service.load();
         assertEquals(1, loaded.getTasks().size());
-        Task t2 = loaded.getTasks().get(0);
+        Task t2 = loaded.getTasks().getFirst();
         assertEquals("Test1", t2.getDescription());
         assertEquals(30, t2.getTotalTime().toMinutes());
     }

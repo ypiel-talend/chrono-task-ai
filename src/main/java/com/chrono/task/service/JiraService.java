@@ -1,8 +1,5 @@
 package com.chrono.task.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -15,6 +12,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class JiraService {
 
     private final HttpClient httpClient;
@@ -26,18 +26,7 @@ public class JiraService {
         this.objectMapper = new ObjectMapper();
     }
 
-    public static class JiraIssue {
-        public String key;
-        public String summary;
-        public String status;
-        public String type;
-
-        public JiraIssue(String key, String summary, String status, String type) {
-            this.key = key;
-            this.summary = summary;
-            this.status = status;
-            this.type = type;
-        }
+    public record JiraIssue(String key, String summary, String status, String type) {
     }
 
     public boolean isJiraUrl(String url) {
@@ -105,9 +94,9 @@ public class JiraService {
         return switch (lower) {
             case "new", "candidate" -> com.chrono.task.model.TaskStatus.TODO;
             case "on hold", "accepted", "in progress", "code review", "merge" ->
-                com.chrono.task.model.TaskStatus.IN_PROGRESS;
-            case "validation"  -> com.chrono.task.model.TaskStatus.VALIDATION;
-            case "done", "close", "rejected","final check" -> com.chrono.task.model.TaskStatus.DONE;
+                    com.chrono.task.model.TaskStatus.IN_PROGRESS;
+            case "validation" -> com.chrono.task.model.TaskStatus.VALIDATION;
+            case "done", "close", "rejected", "final check" -> com.chrono.task.model.TaskStatus.DONE;
             default -> com.chrono.task.model.TaskStatus.UNKNOWN;
         };
     }

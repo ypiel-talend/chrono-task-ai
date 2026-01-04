@@ -25,15 +25,19 @@ import javafx.scene.web.WebView;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 
+ import com.chrono.task.model.Settings;
 import com.chrono.task.model.Task;
 import com.chrono.task.model.TaskDailyWork;
 import com.chrono.task.model.TaskStatus;
+import com.chrono.task.persistence.SettingsStorageService;
 import com.chrono.task.service.JiraService.IssueInfo;
 import com.chrono.task.service.TaskService;
 import com.chrono.task.service.TimerService;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class MainController {
 
     private final TaskService taskService;
@@ -69,8 +73,6 @@ public class MainController {
     // History Tab
     @FXML
     private DatePicker historyDatePicker;
-    @FXML
-    private Label historyEndLabel;
     @FXML
     private DatePicker historyEndDatePicker;
     @FXML
@@ -121,8 +123,8 @@ public class MainController {
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
 
     private final javafx.application.HostServices hostServices;
-    private final com.chrono.task.persistence.SettingsStorageService settingsService;
-    private final com.chrono.task.model.Settings settings;
+    private final SettingsStorageService settingsService;
+    private final Settings settings;
     private final com.chrono.task.service.JiraService jiraService;
     private final com.chrono.task.service.GitBackupService gitBackupService;
     private final com.chrono.task.service.JiraRefreshService jiraRefreshService;
@@ -132,8 +134,8 @@ public class MainController {
     private static final String dailyTimerFormat = "Today: %02d:%02d:%02d";
 
     public MainController(TaskService taskService, TimerService timerService,
-            com.chrono.task.persistence.SettingsStorageService settingsService,
-            com.chrono.task.model.Settings settings,
+            SettingsStorageService settingsService,
+            Settings settings,
             javafx.application.HostServices hostServices,
             com.chrono.task.service.JiraService jiraService,
             com.chrono.task.service.GitBackupService gitBackupService,
@@ -153,10 +155,10 @@ public class MainController {
         // Bind Task List
         taskListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         taskListView.setItems(taskService.getTasks());
-        taskListView.setCellFactory(param -> new TaskListCell());
+        taskListView.setCellFactory(_ -> new TaskListCell());
 
         // Filter
-        filterField.textProperty().addListener((obs, oldVal, newVal) -> {
+        filterField.textProperty().addListener((_, _, newVal) -> {
             if (newVal == null || newVal.isBlank()) {
                 taskListView.setItems(taskService.getTasks());
             } else {
@@ -165,12 +167,10 @@ public class MainController {
         });
 
         // Selection Listener
-        taskListView.getSelectionModel().selectedItemProperty().addListener((obs, oldTask, newTask) -> {
-            loadTaskDetails(newTask);
-        });
+        taskListView.getSelectionModel().selectedItemProperty().addListener((_, _, newTask) -> loadTaskDetails(newTask));
 
         // Active Task Header
-        timerService.activeTaskProperty().addListener((obs, oldVal, newVal) -> {
+        timerService.activeTaskProperty().addListener((_, _, newVal) -> {
             if (newVal != null) {
                 activeTaskLabel.setText("Active: " + newVal.getDescription());
             } else {
@@ -179,31 +179,31 @@ public class MainController {
         });
 
         // Periodic UI update for timer (1 second)
-        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> updateTimerLabel()));
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> updateTimerLabel()));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
 
         // Markdown Auto-Refresh (3 seconds)
-        Timeline markdownTimer = new Timeline(new KeyFrame(Duration.seconds(3), e -> refreshMarkdown()));
+        Timeline markdownTimer = new Timeline(new KeyFrame(Duration.seconds(3), _ -> refreshMarkdown()));
         markdownTimer.setCycleCount(Timeline.INDEFINITE);
         markdownTimer.play();
 
         // Editor listeners to update model
-        markdownEditor.textProperty().addListener((obs, o, n) -> {
+        markdownEditor.textProperty().addListener((_, _, n) -> {
             Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null) {
                 current.setMarkdownContent(n);
             }
         });
 
-        dailyNoteArea.textProperty().addListener((obs, o, n) -> {
+        dailyNoteArea.textProperty().addListener((_, _, n) -> {
             Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null) {
                 current.setDailyNote(LocalDate.now(), n);
             }
         });
 
-        descriptionField.textProperty().addListener((obs, o, n) -> {
+        descriptionField.textProperty().addListener((_, _, n) -> {
             Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null) {
                 try {
@@ -224,29 +224,25 @@ public class MainController {
 
                     if (email != null && !email.isBlank() && token != null && !token.isBlank()) {
                         jiraService.fetchIssue(n, email, token)
-                                .thenAccept(issue -> {
-                                    javafx.application.Platform.runLater(() -> {
-                                        // Update Model
-                                        try {
-                                            taskService.updateTaskDescription(current, issue.summary);
-                                            taskService.updateTaskJiraUrl(current, n);
-                                            current.setStatus(jiraService.mapStatus(issue.status));
-                                        } catch (IllegalArgumentException e) {
-                                            showPopup("Validation Error", "Update Failed: " + e.getMessage());
-                                            return;
-                                        }
-                                        current.setJira(true);
+                                .thenAccept(issue -> javafx.application.Platform.runLater(() -> {
+                                    // Update Model
+                                    try {
+                                        taskService.updateTaskDescription(current, issue.summary());
+                                        taskService.updateTaskJiraUrl(current, n);
+                                        current.setStatus(jiraService.mapStatus(issue.status()));
+                                    } catch (IllegalArgumentException e) {
+                                        showPopup("Validation Error", "Update Failed: " + e.getMessage());
+                                        return;
+                                    }
+                                    current.setJira(true);
 
-                                        // Update UI
-                                        descriptionField.setText(current.getDescription());
-                                        jiraUrlField.setText(current.getJiraUrl());
-                                        taskListView.refresh();
-                                    });
-                                })
+                                    // Update UI
+                                    descriptionField.setText(current.getDescription());
+                                    jiraUrlField.setText(current.getJiraUrl());
+                                    taskListView.refresh();
+                                }))
                                 .exceptionally(ex -> {
-                                    javafx.application.Platform.runLater(() -> {
-                                        showPopup("Jira Error", "Failed to fetch Jira Issue: " + ex.getMessage());
-                                    });
+                                    javafx.application.Platform.runLater(() -> showPopup("Jira Error", "Failed to fetch Jira Issue: " + ex.getMessage()));
                                     return null;
                                 });
                     }
@@ -254,7 +250,7 @@ public class MainController {
             }
         });
 
-        jiraUrlField.textProperty().addListener((obs, o, n) -> {
+        jiraUrlField.textProperty().addListener((_, _, n) -> {
             Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null) {
                 try {
@@ -269,7 +265,7 @@ public class MainController {
             }
         });
 
-        slackUrlField.textProperty().addListener((obs, o, n) -> {
+        slackUrlField.textProperty().addListener((_, _, n) -> {
             Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null) {
                 taskService.updateTaskSlackUrl(current, n);
@@ -278,14 +274,14 @@ public class MainController {
 
         // History Date Picker
         historyDatePicker.setValue(LocalDate.now());
-        historyDatePicker.valueProperty().addListener((obs, o, n) -> onRefreshHistory());
-        historyEndDatePicker.valueProperty().addListener((obs, o, n) -> onRefreshHistory());
-        historyRangeCheckbox.selectedProperty().addListener((obs, o, n) -> onRefreshHistory());
-        historyDurationCheckbox.selectedProperty().addListener((obs, o, n) -> onRefreshHistory());
-        historyDailyNoteCheckbox.selectedProperty().addListener((obs, o, n) -> onRefreshHistory());
+        historyDatePicker.valueProperty().addListener((_, _, _) -> onRefreshHistory());
+        historyEndDatePicker.valueProperty().addListener((_, _, _) -> onRefreshHistory());
+        historyRangeCheckbox.selectedProperty().addListener((_, _, _) -> onRefreshHistory());
+        historyDurationCheckbox.selectedProperty().addListener((_, _, _) -> onRefreshHistory());
+        historyDailyNoteCheckbox.selectedProperty().addListener((_, _, _) -> onRefreshHistory());
         // Status Dropdown
         statusComboBox.getItems().setAll(TaskStatus.values());
-        statusComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+        statusComboBox.valueProperty().addListener((_, _, newVal) -> {
             Task current = taskListView.getSelectionModel().getSelectedItem();
             if (current != null && newVal != null && current.getStatus() != newVal) {
                 current.setStatus(newVal);
@@ -359,7 +355,7 @@ public class MainController {
         }
 
         // Status Bar Bindings
-        taskService.lastSaveTimeProperty().addListener((obs, oldVal, newVal) -> {
+        taskService.lastSaveTimeProperty().addListener((_, _, newVal) -> {
             if (newVal != null) {
                 lastSaveLabel.setText(
                         "Last save: " + newVal.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")));
@@ -370,7 +366,7 @@ public class MainController {
             lastCommitLabel.visibleProperty().bind(gitBackupEnabledCheckbox.selectedProperty());
             lastCommitLabel.managedProperty().bind(gitBackupEnabledCheckbox.selectedProperty());
 
-            gitBackupService.lastCommitMessageProperty().addListener((obs, oldVal, newVal) -> {
+            gitBackupService.lastCommitMessageProperty().addListener((_, _, newVal) -> {
                 if (newVal != null) {
                     lastCommitLabel.setText("Last commit: " + newVal);
                 }
@@ -424,7 +420,7 @@ public class MainController {
             // This could be improved by using an event system or a direct call if we have
             // reference to the service
         } catch (java.io.IOException e) {
-            e.printStackTrace();
+            log.error("Failed to save settings", e);
             showPopup("Error", "Could not save settings: " + e.getMessage());
         }
     }
@@ -535,10 +531,8 @@ public class MainController {
                 // Filter entries that have non-empty notes
                 java.util.List<Map.Entry<LocalDate, TaskDailyWork>> notesWithContent = current.getTaskHistory().entrySet().stream()
                         .filter(entry -> entry.getValue().getNote() != null && !entry.getValue().getNote().isBlank())
-                        .sorted(java.util.Comparator.<Map.Entry<LocalDate, TaskDailyWork>, LocalDate>comparing(
-                                Map.Entry::getKey)
-                                .reversed())
-                        .collect(java.util.stream.Collectors.toList());
+                        .sorted(Map.Entry.<LocalDate, TaskDailyWork>comparingByKey().reversed())
+                        .toList();
 
                 // Only add the section if there are notes with content
                 if (!notesWithContent.isEmpty()) {
@@ -694,7 +688,7 @@ public class MainController {
                     }
                     return false;
                 })
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
 
         if (activeTasks.isEmpty()) {
             historyTextArea.setText("No tasks found for this date range.");
@@ -716,7 +710,7 @@ public class MainController {
                         if (showNotes) {
                             String note = t.getDailyNote(date);
                             if (note != null && !note.isBlank()) {
-                                if (notesBuilder.length() > 0)
+                                if (!notesBuilder.isEmpty())
                                     notesBuilder.append("\n");
                                 notesBuilder.append("  > ").append(date).append(": ")
                                         .append(note.replace("\n", "\n  > "));
@@ -727,13 +721,13 @@ public class MainController {
                             ? String.format(" : %02dh %02dm", totalRangeDuration.toHours(),
                                     totalRangeDuration.toMinutesPart())
                             : "";
-                    final String notesStr = notesBuilder.length() > 0 ? "\n" + notesBuilder.toString() : "";
+                    final String notesStr = !notesBuilder.isEmpty() ? "\n" + notesBuilder : "";
 
                     if (t.isJira() && t.getJiraUrl() != null && !t.getJiraUrl().isBlank()
                             && email != null && !email.isBlank() && token != null && !token.isBlank()) {
                         return jiraService.fetchIssue(t.getJiraUrl(), email, token)
-                                .thenApply(issue -> String.format("%s\t%s\t%s\t%s%s%s", issue.type, t.getJiraUrl(),
-                                        issue.status, issue.summary, durationStr, notesStr))
+                                .thenApply(issue -> String.format("%s\t%s\t%s\t%s%s%s", issue.type(), t.getJiraUrl(),
+                                        issue.status(), issue.summary(), durationStr, notesStr))
                                 .exceptionally(ex -> "Error fetching Jira: " + t.getJiraUrl() + " - " + ex.getMessage()
                                         + durationStr + notesStr);
                     } else {
@@ -741,14 +735,12 @@ public class MainController {
                                 .completedFuture(t.getDescription() + durationStr + notesStr);
                     }
                 })
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
 
         java.util.concurrent.CompletableFuture.allOf(futures.toArray(new java.util.concurrent.CompletableFuture[0]))
-                .thenApply(v -> {
-                    return futures.stream()
-                            .map(java.util.concurrent.CompletableFuture::join)
-                            .collect(java.util.stream.Collectors.joining("\n"));
-                })
+                .thenApply(_ -> futures.stream()
+                        .map(java.util.concurrent.CompletableFuture::join)
+                        .collect(java.util.stream.Collectors.joining("\n")))
                 .thenAccept(report -> javafx.application.Platform.runLater(() -> historyTextArea.setText(report)))
                 .exceptionally(ex -> {
                     javafx.application.Platform
@@ -818,21 +810,17 @@ public class MainController {
                     if (email != null && !email.isBlank() && token != null && !token.isBlank()) {
                         statusLabel.setText("Updating...");
                         jiraService.fetchIssue(item.getJiraUrl(), email, token)
-                                .thenAccept(issue -> {
-                                    javafx.application.Platform.runLater(() -> {
-                                        TaskStatus newStatus = jiraService.mapStatus(issue.status);
-                                        item.setStatus(newStatus);
-                                        boolean showStatus = newStatus != TaskStatus.NONE;
-                                        statusLabel.setText(showStatus ? newStatus.name() : "");
-                                        statusLabel.setVisible(showStatus);
-                                        statusLabel.setManaged(showStatus);
-                                        taskListView.refresh();
-                                    });
-                                })
+                                .thenAccept(issue -> javafx.application.Platform.runLater(() -> {
+                                    TaskStatus newStatus = jiraService.mapStatus(issue.status());
+                                    item.setStatus(newStatus);
+                                    boolean showStatus = newStatus != TaskStatus.NONE;
+                                    statusLabel.setText(showStatus ? newStatus.name() : "");
+                                    statusLabel.setVisible(showStatus);
+                                    statusLabel.setManaged(showStatus);
+                                    taskListView.refresh();
+                                }))
                                 .exceptionally(ex -> {
-                                    javafx.application.Platform.runLater(() -> {
-                                        showPopup("Jira Error", "Failed to refresh status: " + ex.getMessage());
-                                    });
+                                    javafx.application.Platform.runLater(() -> showPopup("Jira Error", "Failed to refresh status: " + ex.getMessage()));
                                     return null;
                                 });
                     }

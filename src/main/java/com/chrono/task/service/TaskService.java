@@ -8,6 +8,9 @@ import javafx.collections.ObservableList;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -17,9 +20,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class TaskService {
 
     private final StorageService storageService;
+
+    @Getter
     private final ObservableList<Task> tasks;
     private final ScheduledExecutorService autoSaveScheduler;
     private final ObjectProperty<LocalDateTime> lastSaveTime = new SimpleObjectProperty<>();
@@ -44,10 +50,6 @@ public class TaskService {
 
         // Schedule auto-save every 3 minutes
         autoSaveScheduler.scheduleAtFixedRate(this::saveSafely, 30, 3, TimeUnit.MINUTES);
-    }
-
-    public ObservableList<Task> getTasks() {
-        return tasks;
     }
 
     public ObjectProperty<LocalDateTime> lastSaveTimeProperty() {
@@ -128,9 +130,9 @@ public class TaskService {
             DataStore store = new DataStore(List.copyOf(tasks));
             storageService.save(store);
             javafx.application.Platform.runLater(() -> lastSaveTime.set(LocalDateTime.now()));
-            System.out.println("Auto-saved at " + LocalDateTime.now());
+            log.info("Auto-saved at {}", LocalDateTime.now());
         } catch (IOException e) {
-            e.printStackTrace(); // Log error (simple stdout for now)
+            log.error("Failed to auto-save tasks", e);
         }
     }
 

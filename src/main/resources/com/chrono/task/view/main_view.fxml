@@ -116,10 +116,9 @@
                             <children>
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <children>
-                                        <javafx.scene.control.CheckBox fx:id="historyRangeCheckbox" text="Range selection" selected="false"/>
+                                        <javafx.scene.control.CheckBox fx:id="historyRangeCheckbox" text="Range selection"/>
                                         <Label text="Start:"/>
                                         <DatePicker fx:id="historyDatePicker" prefWidth="120.0"/>
-                                        <Label text="End:" fx:id="historyEndLabel" visible="${historyRangeCheckbox.selected}" managed="${historyRangeCheckbox.selected}"/>
                                         <DatePicker fx:id="historyEndDatePicker" prefWidth="120.0" visible="${historyRangeCheckbox.selected}" managed="${historyRangeCheckbox.selected}"/>
                                         <Button onAction="#onRefreshHistory" text="↻">
                                             <font>
@@ -127,7 +126,7 @@
                                             </font>
                                         </Button>
                                          <javafx.scene.control.CheckBox fx:id="historyDurationCheckbox" text="with duration" selected="true"/>
-                                         <javafx.scene.control.CheckBox fx:id="historyDailyNoteCheckbox" text="Include daily note" selected="false"/>
+                                         <javafx.scene.control.CheckBox fx:id="historyDailyNoteCheckbox" text="Include daily note"/>
                                     </children>
                                 </HBox>
                                 <TextArea fx:id="historyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0"

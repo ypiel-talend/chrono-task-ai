@@ -6,5 +6,5 @@ public enum TaskStatus {
     VALIDATION,
     DONE,
     NONE,
-    UNKNOWN;
+    UNKNOWN
 }

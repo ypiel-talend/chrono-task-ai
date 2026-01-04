@@ -1,7 +1,6 @@
 package com.chrono.task.service;
 
 import com.chrono.task.model.Task;
-import com.chrono.task.model.TaskDailyWork;
 import java.time.LocalDate;
 import com.chrono.task.persistence.StorageService;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,12 +13,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TaskServiceTest {
 
-    private StorageService storageMock;
     private TaskService service;
 
     @BeforeEach
     void setup() {
-        storageMock = Mockito.mock(StorageService.class);
+        StorageService storageMock = Mockito.mock(StorageService.class);
         service = new TaskService(storageMock);
     }
 
@@ -41,7 +39,7 @@ class TaskServiceTest {
 
         assertEquals(0, t2.getOrder());
         assertEquals(1, t1.getOrder());
-        assertEquals("B", service.getTasks().get(0).getDescription());
+        assertEquals("B", service.getTasks().getFirst().getDescription());
     }
 
     @Test
@@ -51,7 +49,7 @@ class TaskServiceTest {
 
         // Basic description match
         assertEquals(1, service.filter("Milk").size());
-        assertEquals(t1, service.filter("Milk").get(0));
+        assertEquals(t1, service.filter("Milk").getFirst());
 
         // Case insensitivity
         assertEquals(1, service.filter("milk").size());
@@ -66,17 +64,17 @@ class TaskServiceTest {
         t2.setMarkdownContent("Remember to buy poop bags");
         assertEquals(2, service.filter("buy").size());
         assertEquals(1, service.filter("bags").size());
-        assertEquals(t2, service.filter("bags").get(0));
+        assertEquals(t2, service.filter("bags").getFirst());
 
         // Daily note match
         t1.setDailyNote(LocalDate.now(), "Got some organic milk");
         assertEquals(1, service.filter("organic").size());
-        assertEquals(t1, service.filter("organic").get(0));
+        assertEquals(t1, service.filter("organic").getFirst());
 
         // Jira URL match
         t2.setJiraUrl("https://jira.example.com/browse/DOG-123");
         assertEquals(1, service.filter("DOG-123").size());
-        assertEquals(t2, service.filter("DOG-123").get(0));
+        assertEquals(t2, service.filter("DOG-123").getFirst());
     }
 
     @Test
@@ -132,6 +130,6 @@ class TaskServiceTest {
 
         // Check filter
         assertEquals(1, service.filter("archives/C12345").size());
-        assertEquals(t, service.filter("archives/C12345").get(0));
+        assertEquals(t, service.filter("archives/C12345").getFirst());
     }
 }

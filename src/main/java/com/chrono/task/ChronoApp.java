@@ -36,7 +36,10 @@ public class ChronoApp extends Application {
         }
         File dataDir = new File(dataPath);
         if (!dataDir.exists()) {
-            dataDir.mkdirs();
+            if(!dataDir.mkdirs()){
+                throw new RuntimeException("Can't create folder for data storage: " + dataDir.getAbsolutePath());
+            }
+
         }
         String dataFilePath = new File(dataDir, "data.json").getAbsolutePath();
 
@@ -85,7 +88,7 @@ public class ChronoApp extends Application {
             notificationService.shutdown();
     }
 
-    public static void main(String[] args) {
+    static void main() {
         launch();
     }
 }

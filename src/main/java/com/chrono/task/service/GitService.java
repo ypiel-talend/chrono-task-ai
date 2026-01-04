@@ -62,13 +62,14 @@ public class GitService {
         Process process = pb.start();
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            //noinspection StatementWithEmptyBody
             while (reader.readLine() != null) {
                 // Ignore output
             }
         }
 
         int exitCode = process.waitFor();
-        if (exitCode != 0 && !command[2].equals("commit")) { // Commit might fail if no changes
+        if (exitCode != 0 && !command[1].equals("commit")) { // Commit might fail if no changes
             throw new IOException("Git command failed with exit code " + exitCode + ": " + String.join(" ", command));
         }
     }
