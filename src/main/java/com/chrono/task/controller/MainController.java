@@ -100,6 +100,8 @@ public class MainController {
     @FXML
     private TextField jiraEmailField;
     @FXML
+    private TextField jiraBaseUrlField;
+    @FXML
     private ComboBox<TaskStatus> statusComboBox;
 
     @FXML
@@ -122,6 +124,10 @@ public class MainController {
     private ComboBox<java.time.temporal.ChronoUnit> jiraRefreshUnitComboBox;
     @FXML
     private Label jiraUpdateLabel;
+    @FXML
+    private TextField timeAdjustmentField;
+    @FXML
+    private TextField jqlQueryField;
 
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
@@ -312,6 +318,9 @@ public class MainController {
         if (jiraEmailField != null) {
             jiraEmailField.setText(settings.getJiraEmail());
         }
+        if (jiraBaseUrlField != null) {
+            jiraBaseUrlField.setText(settings.getJiraBaseUrl());
+        }
         if (jiraRefreshEnabledCheckbox != null) {
             jiraRefreshEnabledCheckbox.setSelected(settings.isJiraRefreshEnabled());
         }
@@ -324,6 +333,9 @@ public class MainController {
                     java.time.temporal.ChronoUnit.MINUTES,
                     java.time.temporal.ChronoUnit.SECONDS);
             jiraRefreshUnitComboBox.setValue(settings.getJiraRefreshUnit());
+        }
+        if (jqlQueryField != null) {
+            jqlQueryField.setText(settings.getJqlQuery());
         }
 
         if (jiraUpdateLabel != null && jiraRefreshService != null) {
@@ -390,6 +402,7 @@ public class MainController {
     public void onSaveSettings() {
         settings.setJiraApiToken(jiraApiTokenField.getText());
         settings.setJiraEmail(jiraEmailField.getText());
+        settings.setJiraBaseUrl(jiraBaseUrlField.getText());
         settings.setDataStoragePath(dataStoragePathField.getText());
         settings.setGitBackupEnabled(gitBackupEnabledCheckbox.isSelected());
         try {
@@ -409,6 +422,7 @@ public class MainController {
             return;
         }
         settings.setJiraRefreshUnit(jiraRefreshUnitComboBox.getValue());
+        settings.setJqlQuery(jqlQueryField.getText());
 
         try {
             settingsService.save(settings);
@@ -504,9 +518,6 @@ public class MainController {
         statusComboBox.setValue(task.getStatus());
         refreshMarkdown(); // Immediate refresh
     }
-
-    @FXML
-    private TextField timeAdjustmentField;
 
     @FXML
     public void onAdjustTime() {
@@ -857,7 +868,12 @@ public class MainController {
 
             setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && getItem() != null) {
-                    timerService.setActiveTask(getItem());
+                    Task task = getItem();
+                    // Clear the tag when task is double-clicked to start timing
+                    if ("new_auto".equals(task.getTag())) {
+                        task.setTag("");
+                    }
+                    timerService.setActiveTask(task);
                 }
             });
 
@@ -952,6 +968,7 @@ public class MainController {
             if (empty || item == null) {
                 setText(null);
                 setGraphic(null);
+                setStyle("");
             } else {
                 setText(null);
                 label.setText(item.getLabel());
@@ -966,6 +983,13 @@ public class MainController {
                 slackButton.setVisible(hasSlack);
                 slackButton.setManaged(hasSlack);
                 setGraphic(hbox);
+
+                // Apply different styling for auto-created tasks
+                if ("new_auto".equals(item.getTag())) {
+                    setStyle("-fx-background-color: #FFD17A; -fx-border-color: #FFD17A;");
+                } else {
+                    setStyle("");
+                }
             }
         }
     }

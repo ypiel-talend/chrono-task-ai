@@ -215,6 +215,12 @@
                                 </Label>
                                 <VBox spacing="5.0">
                                     <children>
+                                        <Label text="Jira Base URL:"/>
+                                        <TextField fx:id="jiraBaseUrlField" promptText="e.g., https://yourcompany.atlassian.net"/>
+                                    </children>
+                                </VBox>
+                                <VBox spacing="5.0">
+                                    <children>
                                         <Label text="Jira Email:"/>
                                         <TextField fx:id="jiraEmailField" promptText="Enter Jira Email"/>
                                     </children>
@@ -232,6 +238,12 @@
                                                 <ToggleButton fx:id="tokenVisibilityToggle" text="👁"/>
                                             </children>
                                         </HBox>
+                                    </children>
+                                </VBox>
+                                <VBox spacing="5.0">
+                                    <children>
+                                        <Label text="JQL Query for Auto-Creation:"/>
+                                        <TextField fx:id="jqlQueryField" promptText="Enter JQL query (e.g., assignee = currentUser() AND status != Done)"/>
                                     </children>
                                 </VBox>
 

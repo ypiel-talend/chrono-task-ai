@@ -2,11 +2,14 @@ package com.chrono.task.service;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -15,6 +18,9 @@ import java.util.regex.Pattern;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class JiraService {
 
     private final HttpClient httpClient;
@@ -96,11 +102,83 @@ public class JiraService {
             case "on hold", "accepted", "in progress", "code review", "merge" ->
                     com.chrono.task.model.TaskStatus.IN_PROGRESS;
             case "validation" -> com.chrono.task.model.TaskStatus.VALIDATION;
-            case "done", "close", "rejected", "final check" -> com.chrono.task.model.TaskStatus.DONE;
+            case "done", "closed", "rejected", "final check", "eap" -> com.chrono.task.model.TaskStatus.DONE;
             default -> com.chrono.task.model.TaskStatus.UNKNOWN;
         };
     }
 
     public record IssueInfo(String url, String domain, String issueKey) {
+    }
+
+    /**
+     * Execute a JQL query and return list of Jira issues
+     * @param jqlQuery The JQL query string
+     * @param email Jira user email
+     * @param token Jira API token
+     * @param baseUrl The Jira base URL (e.g., "https://yourcompany.atlassian.net" or "https://jira.yourcompany.com")
+     */
+    public CompletableFuture<List<JiraIssue>> searchByJql(String jqlQuery, String email, String token, String baseUrl) {
+        if (jqlQuery == null || jqlQuery.isBlank() || baseUrl == null || baseUrl.isBlank()) {
+            return CompletableFuture.completedFuture(new ArrayList<>());
+        }
+
+        try {
+            // Normalize base URL - remove trailing slash if present
+            String normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+
+            String encodedJql = URLEncoder.encode(jqlQuery, StandardCharsets.UTF_8);
+            String apiUrl = String.format("%s/rest/api/3/search/jql?jql=%s&maxResults=100&fields=key,summary,status,issuetype",
+                    normalizedBaseUrl, encodedJql);
+            if(log.isDebugEnabled()) {
+                log.debug("JQL quey : %s".formatted(apiUrl));
+            }
+
+            String auth = email + ":" + token;
+            String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .header("Authorization", "Basic " + encodedAuth)
+                    .header("Accept", "application/json")
+                    .GET()
+                    .build();
+
+            return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(response -> {
+                        if (response.statusCode() == 200) {
+                            try {
+                                JsonNode root = objectMapper.readTree(response.body());
+                                JsonNode issues = root.path("issues");
+                                List<JiraIssue> result = new ArrayList<>();
+
+                                for (JsonNode issue : issues) {
+                                    String key = issue.path("key").asText();
+                                    String summary = issue.path("fields").path("summary").asText();
+                                    String statusName = issue.path("fields").path("status").path("name").asText();
+                                    String typeName = issue.path("fields").path("issuetype").path("name").asText();
+                                    result.add(new JiraIssue(key, summary, statusName, typeName));
+                                }
+                                return result;
+                            } catch (IOException e) {
+                                throw new RuntimeException("Failed to parse Jira search response", e);
+                            }
+                        } else {
+                            throw new RuntimeException("Jira API search returned status: " + response.statusCode());
+                        }
+                    });
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    /**
+     * Build Jira issue browse URL from base URL and issue key
+     * @param baseUrl The Jira base URL
+     * @param issueKey The issue key (e.g., "PROJ-123")
+     * @return Full browse URL for the issue
+     */
+    public String buildIssueUrl(String baseUrl, String issueKey) {
+        String normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        return String.format("%s/browse/%s", normalizedBaseUrl, issueKey);
     }
 }

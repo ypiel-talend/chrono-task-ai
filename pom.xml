@@ -132,6 +132,7 @@
                     <mainClass>com.chrono.task.ChronoApp</mainClass>
                     <options>
                          <option>--enable-preview</option>
+                        <!--option>-Dchronotaskai.settings.file=C:/tmp/chronotaskai/.chrono-task-ai.settings.test.json</option-->
                     </options>
                 </configuration>
             </plugin>

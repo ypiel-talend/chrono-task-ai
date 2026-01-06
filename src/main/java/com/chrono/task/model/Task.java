@@ -42,6 +42,9 @@ public class Task {
     private List<String> tags = new ArrayList<>();
 
     @Builder.Default
+    private String tag = "";
+
+    @Builder.Default
     private Map<LocalDate, TaskDailyWork> taskHistory = new HashMap<>();
 
     @Builder.Default

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 public class Settings {
     private String jiraApiToken;
     private String jiraEmail;
+    private String jiraBaseUrl = "";
 
     private String dataStoragePath = System.getProperty("user.home") + java.io.File.separator + ".chrono-task-ai";
     private long gitBackupInterval = 1;
@@ -20,6 +21,7 @@ public class Settings {
     private long jiraRefreshInterval = 15;
     private ChronoUnit jiraRefreshUnit = ChronoUnit.MINUTES;
     private boolean jiraRefreshEnabled = false;
+    private String jqlQuery = "";
 
     private String markdownFont = "System";
 }
