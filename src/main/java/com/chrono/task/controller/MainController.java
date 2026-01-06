@@ -84,6 +84,10 @@ public class MainController {
     @FXML
     private TextField descriptionField;
     @FXML
+    private Button copyJiraUrlButton;
+    @FXML
+    private Button copySlackUrlButton;
+    @FXML
     private TextField jiraUrlField;
     @FXML
     private TextField slackUrlField;
@@ -518,6 +522,62 @@ public class MainController {
                 // Ignore or show alert
                 System.err.println("Invalid number: " + text);
             }
+        }
+    }
+
+    @FXML
+    public void onCopyJiraUrl() {
+        Task current = taskListView.getSelectionModel().getSelectedItem();
+        if (current != null) {
+            String textToCopy;
+            String jiraUrl = current.getJiraUrl();
+            String description = current.getDescription();
+
+            // Copy to clipboard
+            javafx.scene.input.Clipboard clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
+            javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+
+            // If task has a Jira URL set, concatenate URL + ": " + description
+            if (jiraUrl != null && !jiraUrl.isBlank()) {
+                textToCopy = jiraUrl + ": " + description;
+                content.putUrl(jiraUrl);
+                content.putHtml("<a href=\"%s\">%s</a>".formatted(jiraUrl, description));
+            } else {
+                textToCopy = description;
+            }
+
+            content.putString(textToCopy);
+            clipboard.setContent(content);
+
+            log.info("Jira URL copied to clipboard: {}", textToCopy);
+        }
+    }
+
+    @FXML
+    public void onCopySlackUrl() {
+        Task current = taskListView.getSelectionModel().getSelectedItem();
+        if (current != null) {
+            String textToCopy;
+            String slackUrl = current.getSlackUrl();
+            String description = current.getDescription();
+
+            // Copy to clipboard
+            javafx.scene.input.Clipboard clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
+            javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+
+            // If task has a Jira URL set, concatenate URL + ": " + description
+            if (slackUrl != null && !slackUrl.isBlank()) {
+                textToCopy = slackUrl + ": " + description;
+                content.putUrl(slackUrl);
+                content.putHtml("<a href=\"%s\">%s</a>".formatted(slackUrl, description));
+            } else {
+                textToCopy = description;
+            }
+
+            content.putString(textToCopy);
+            clipboard.setContent(content);
+
+            log.info("Slack URL copied to clipboard: {}", textToCopy);
         }
     }
 
