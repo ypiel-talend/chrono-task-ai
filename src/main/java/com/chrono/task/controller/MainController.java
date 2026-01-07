@@ -494,6 +494,8 @@ public class MainController {
         while (true) {
             try {
                 taskService.createTask(name);
+                taskListView.setItems(taskService.getTasks());
+                taskListView.refresh();
                 break;
             } catch (IllegalArgumentException e) {
                 index++;
