@@ -58,6 +58,8 @@ public class MainController {
     @FXML
     private TextField filterField;
     @FXML
+    private javafx.scene.control.CheckBox showDoneTasksCheckbox;
+    @FXML
     private ListView<Task> taskListView;
     @FXML
     private TextArea markdownEditor;
@@ -167,14 +169,15 @@ public class MainController {
         taskListView.setItems(taskService.getTasks());
         taskListView.setCellFactory(_ -> new TaskListCell());
 
-        // Filter
-        filterField.textProperty().addListener((_, _, newVal) -> {
-            if (newVal == null || newVal.isBlank()) {
-                taskListView.setItems(taskService.getTasks());
-            } else {
-                taskListView.setItems(javafx.collections.FXCollections.observableArrayList(taskService.filter(newVal)));
-            }
-        });
+        // Initialize showDoneTasksCheckbox as unchecked (hide Done tasks by default)
+        showDoneTasksCheckbox.setSelected(false);
+
+        // Filter - listen to both filterField text changes and showDoneTasksCheckbox changes
+        filterField.textProperty().addListener((_, _, newVal) -> applyFilters());
+        showDoneTasksCheckbox.selectedProperty().addListener((_, _, newVal) -> applyFilters());
+
+        // Apply initial filter to hide Done tasks by default
+        applyFilters();
 
         // Selection Listener
         taskListView.getSelectionModel().selectedItemProperty().addListener((_, _, newTask) -> loadTaskDetails(newTask));
@@ -640,6 +643,31 @@ public class MainController {
 
             markdownPreview.getEngine().loadContent(styledHtml);
         }
+    }
+
+    /**
+     * Apply both text filter and Done status filter to the task list
+     */
+    private void applyFilters() {
+        String filterText = filterField.getText();
+        boolean showDoneTasks = showDoneTasksCheckbox.isSelected();
+
+        // Start with all tasks or filtered tasks based on text
+        java.util.List<Task> filteredTasks;
+        if (filterText == null || filterText.isBlank()) {
+            filteredTasks = new java.util.ArrayList<>(taskService.getTasks());
+        } else {
+            filteredTasks = taskService.filter(filterText);
+        }
+
+        // Apply Done status filter if checkbox is unchecked
+        if (!showDoneTasks) {
+            filteredTasks = filteredTasks.stream()
+                    .filter(task -> task.getStatus() != TaskStatus.DONE)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+
+        taskListView.setItems(javafx.collections.FXCollections.observableArrayList(filteredTasks));
     }
 
     private void updateTimerLabel() {

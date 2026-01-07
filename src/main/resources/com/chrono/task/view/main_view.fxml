@@ -64,6 +64,7 @@
                                 <VBox spacing="10.0">
                                     <children>
                                         <TextField fx:id="filterField" promptText="Filter tasks..."/>
+                                        <CheckBox fx:id="showDoneTasksCheckbox" text="Show completed tasks"/>
                                         <ListView fx:id="taskListView" VBox.vgrow="ALWAYS"/>
                                         <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false"
                                                 onAction="#onAddTask" text="Add New Task"/>
