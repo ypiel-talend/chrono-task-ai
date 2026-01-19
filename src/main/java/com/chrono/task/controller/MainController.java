@@ -657,13 +657,7 @@ public class MainController {
         boolean showDoneTasks = showDoneTasksCheckbox.isSelected();
 
         // Start with all tasks or filtered tasks based on text
-        java.util.List<Task> filteredTasks;
-        if (filterText == null || filterText.isBlank()) {
-            filteredTasks = new java.util.ArrayList<>(taskService.getTasks());
-        } else {
-            filteredTasks = taskService.filter(filterText, showDoneTasks);
-        }
-
+        java.util.List<Task> filteredTasks = filteredTasks = taskService.filter(filterText, showDoneTasks);
         taskListView.setItems(javafx.collections.FXCollections.observableArrayList(filteredTasks));
     }
 

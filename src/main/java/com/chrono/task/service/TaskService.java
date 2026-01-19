@@ -1,16 +1,5 @@
 package com.chrono.task.service;
 
-import com.chrono.task.model.DataStore;
-import com.chrono.task.model.Task;
-import com.chrono.task.persistence.StorageService;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -19,6 +8,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+import com.chrono.task.model.DataStore;
+import com.chrono.task.model.Task;
+import com.chrono.task.persistence.StorageService;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TaskService {
@@ -92,22 +94,21 @@ public class TaskService {
      * Filters tasks based on a query string against description, jiraUrl, or tags.
      */
     public List<Task> filter(String query, boolean showDoneTasks) {
-        if (query == null || query.isBlank()) {
-            return tasks;
+        Stream<Task> stream = tasks.stream();
+        if (query != null && !query.trim().isBlank()) {
+            String lowerQuery = query.toLowerCase();
+            stream = stream.filter(t -> (t.getDescription() != null && t.getDescription().toLowerCase().contains(lowerQuery)) ||
+                    (t.getJiraUrl() != null && t.getJiraUrl().toLowerCase().contains(lowerQuery)) ||
+                    (t.getSlackUrl() != null && t.getSlackUrl().toLowerCase().contains(lowerQuery)) ||
+                    (t.getMarkdownContent() != null && t.getMarkdownContent().toLowerCase().contains(lowerQuery)) ||
+                    (t.getTaskHistory().values().stream()
+                            .anyMatch(work -> work.getNote() != null
+                                    && work.getNote().toLowerCase().contains(lowerQuery)))
+                    ||
+                    (t.getTags() != null
+                            && t.getTags().stream().anyMatch(tag -> tag.toLowerCase().contains(lowerQuery))));
         }
-        String lowerQuery = query.toLowerCase();
-        return tasks.stream()
-                .filter(t -> (t.getDescription() != null && t.getDescription().toLowerCase().contains(lowerQuery)) ||
-                        (t.getJiraUrl() != null && t.getJiraUrl().toLowerCase().contains(lowerQuery)) ||
-                        (t.getSlackUrl() != null && t.getSlackUrl().toLowerCase().contains(lowerQuery)) ||
-                        (t.getMarkdownContent() != null && t.getMarkdownContent().toLowerCase().contains(lowerQuery)) ||
-                        (t.getTaskHistory().values().stream()
-                                .anyMatch(work -> work.getNote() != null
-                                        && work.getNote().toLowerCase().contains(lowerQuery)))
-                        ||
-                        (t.getTags() != null
-                                && t.getTags().stream().anyMatch(tag -> tag.toLowerCase().contains(lowerQuery))))
-                .filter(t -> showDoneTasks || t.getStatus() != com.chrono.task.model.TaskStatus.DONE)
+        return stream.filter(t -> showDoneTasks || t.getStatus() != com.chrono.task.model.TaskStatus.DONE)
                 .collect(Collectors.toList());
     }
 
