@@ -48,33 +48,33 @@ class TaskServiceTest {
         Task t2 = service.createTask("Walk Dog");
 
         // Basic description match
-        assertEquals(1, service.filter("Milk").size());
-        assertEquals(t1, service.filter("Milk").getFirst());
+        assertEquals(1, service.filter("Milk", true).size());
+        assertEquals(t1, service.filter("Milk", true).getFirst());
 
         // Case insensitivity
-        assertEquals(1, service.filter("milk").size());
+        assertEquals(1, service.filter("milk", true).size());
 
         // Empty query
-        assertEquals(2, service.filter("").size());
+        assertEquals(2, service.filter("", true).size());
 
         // No match
-        assertEquals(0, service.filter("Cat").size());
+        assertEquals(0, service.filter("Cat", true).size());
 
         // Markdown match
         t2.setMarkdownContent("Remember to buy poop bags");
-        assertEquals(2, service.filter("buy").size());
-        assertEquals(1, service.filter("bags").size());
-        assertEquals(t2, service.filter("bags").getFirst());
+        assertEquals(2, service.filter("buy", true).size());
+        assertEquals(1, service.filter("bags", true).size());
+        assertEquals(t2, service.filter("bags", true).getFirst());
 
         // Daily note match
         t1.setDailyNote(LocalDate.now(), "Got some organic milk");
-        assertEquals(1, service.filter("organic").size());
-        assertEquals(t1, service.filter("organic").getFirst());
+        assertEquals(1, service.filter("organic", true).size());
+        assertEquals(t1, service.filter("organic", true).getFirst());
 
         // Jira URL match
         t2.setJiraUrl("https://jira.example.com/browse/DOG-123");
-        assertEquals(1, service.filter("DOG-123").size());
-        assertEquals(t2, service.filter("DOG-123").getFirst());
+        assertEquals(1, service.filter("DOG-123", true).size());
+        assertEquals(t2, service.filter("DOG-123", true).getFirst());
     }
 
     @Test
@@ -129,7 +129,7 @@ class TaskServiceTest {
         assertEquals("https://slack.com/archives/C12345", t.getSlackUrl());
 
         // Check filter
-        assertEquals(1, service.filter("archives/C12345").size());
-        assertEquals(t, service.filter("archives/C12345").getFirst());
+        assertEquals(1, service.filter("archives/C12345", true).size());
+        assertEquals(t, service.filter("archives/C12345", true).getFirst());
     }
 }

@@ -91,7 +91,7 @@ public class TaskService {
     /**
      * Filters tasks based on a query string against description, jiraUrl, or tags.
      */
-    public List<Task> filter(String query) {
+    public List<Task> filter(String query, boolean showDoneTasks) {
         if (query == null || query.isBlank()) {
             return tasks;
         }
@@ -107,6 +107,7 @@ public class TaskService {
                         ||
                         (t.getTags() != null
                                 && t.getTags().stream().anyMatch(tag -> tag.toLowerCase().contains(lowerQuery))))
+                .filter(t -> showDoneTasks || t.getStatus() != com.chrono.task.model.TaskStatus.DONE)
                 .collect(Collectors.toList());
     }
 

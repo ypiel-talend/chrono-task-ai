@@ -659,14 +659,7 @@ public class MainController {
         if (filterText == null || filterText.isBlank()) {
             filteredTasks = new java.util.ArrayList<>(taskService.getTasks());
         } else {
-            filteredTasks = taskService.filter(filterText);
-        }
-
-        // Apply Done status filter if checkbox is unchecked
-        if (!showDoneTasks) {
-            filteredTasks = filteredTasks.stream()
-                    .filter(task -> task.getStatus() != TaskStatus.DONE)
-                    .collect(java.util.stream.Collectors.toList());
+            filteredTasks = taskService.filter(filterText, showDoneTasks);
         }
 
         taskListView.setItems(javafx.collections.FXCollections.observableArrayList(filteredTasks));
