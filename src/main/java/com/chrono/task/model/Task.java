@@ -127,14 +127,21 @@ public class Task {
     }
 
     @JsonIgnore
-    public String getLabel() {
+    public String getDisplayLabel() {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.getOrder()).append(" - ");
         if (isJira) {
             sb.append(this.getJiraUrl().substring(this.getJiraUrl().lastIndexOf('/') + 1));
             sb.append(": ");
         }
         sb.append(this.getDescription());
+        return sb.toString();
+    }
+
+    @JsonIgnore
+    public String getLabel() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.getOrder()).append(" - ");
+        sb.append(this.getDisplayLabel());
         return sb.toString();
     }
 

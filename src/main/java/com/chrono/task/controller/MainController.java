@@ -185,7 +185,7 @@ public class MainController {
         // Active Task Header
         timerService.activeTaskProperty().addListener((_, _, newVal) -> {
             if (newVal != null) {
-                activeTaskLabel.setText("Active: " + newVal.getDescription());
+                activeTaskLabel.setText(newVal.getDisplayLabel());
             } else {
                 activeTaskLabel.setText("No Active Task");
             }
@@ -547,6 +547,8 @@ public class MainController {
         if (current != null) {
             String textToCopy;
             String jiraUrl = current.getJiraUrl();
+            Optional<IssueInfo> issueInfo = jiraService.parseUrl(jiraUrl);
+            String jiraId = issueInfo.orElse(new IssueInfo("", "","N/A")).issueKey();
             String description = current.getDescription();
 
             // Copy to clipboard
@@ -557,7 +559,7 @@ public class MainController {
             if (jiraUrl != null && !jiraUrl.isBlank()) {
                 textToCopy = jiraUrl + ": " + description;
                 content.putUrl(jiraUrl);
-                content.putHtml("<a href=\"%s\">%s</a>".formatted(jiraUrl, description));
+                content.putHtml("<a href=\"%s\">%s: %s</a>".formatted(jiraUrl, jiraId, description));
             } else {
                 textToCopy = description;
             }
