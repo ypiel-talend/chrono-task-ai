@@ -17,6 +17,7 @@ import javafx.collections.ObservableList;
 
 import com.chrono.task.model.DataStore;
 import com.chrono.task.model.Task;
+import com.chrono.task.model.TaskStatus;
 import com.chrono.task.persistence.StorageService;
 
 import lombok.Getter;
@@ -108,7 +109,8 @@ public class TaskService {
                     (t.getTags() != null
                             && t.getTags().stream().anyMatch(tag -> tag.toLowerCase().contains(lowerQuery))));
         }
-        return stream.filter(t -> showDoneTasks || t.getStatus() != com.chrono.task.model.TaskStatus.DONE)
+        return stream.filter(t -> showDoneTasks ||
+                        (t.getStatus() != com.chrono.task.model.TaskStatus.DONE && t.getStatus() != TaskStatus.TO_DELETE))
                 .collect(Collectors.toList());
     }
 
@@ -129,7 +131,7 @@ public class TaskService {
             tasks.forEach(Task::cleanupHistory);
 
             // Create a snapshot to save
-            DataStore store = new DataStore(List.copyOf(tasks));
+            DataStore store = new DataStore(List.copyOf(tasks.stream().filter(t -> t.getStatus() != TaskStatus.TO_DELETE).toList()));
             storageService.save(store);
             javafx.application.Platform.runLater(() -> lastSaveTime.set(LocalDateTime.now()));
             log.info("Auto-saved at {}", LocalDateTime.now());

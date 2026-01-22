@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.chrono.task.model.TaskStatus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -102,7 +103,8 @@ public class JiraService {
             case "on hold", "accepted", "in progress", "code review", "merge" ->
                     com.chrono.task.model.TaskStatus.IN_PROGRESS;
             case "validation" -> com.chrono.task.model.TaskStatus.VALIDATION;
-            case "done", "closed", "rejected", "final check", "eap" -> com.chrono.task.model.TaskStatus.DONE;
+            case "done", "closed", "final check", "eap" -> com.chrono.task.model.TaskStatus.DONE;
+            case "rejected" -> TaskStatus.TO_DELETE;
             default -> com.chrono.task.model.TaskStatus.UNKNOWN;
         };
     }

@@ -92,8 +92,10 @@ public class JiraRefreshService {
 
         // First, refresh existing tasks with Jira URLs
         taskService.getTasks().forEach(task -> {
-            if (task.getJiraUrl() != null && !task.getJiraUrl().isBlank() &&
-                    task.getStatus() != TaskStatus.DONE && task.getStatus() != TaskStatus.NONE) {
+            if (task.getJiraUrl() != null && !task.getJiraUrl().isBlank()
+                    && task.getStatus() != TaskStatus.DONE
+                    && task.getStatus() != TaskStatus.TO_DELETE
+                    && task.getStatus() != TaskStatus.NONE) {
 
                 var future = jiraService
                         .fetchIssue(task.getJiraUrl(), settings.getJiraEmail(), settings.getJiraApiToken())
