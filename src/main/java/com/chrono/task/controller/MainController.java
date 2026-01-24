@@ -268,12 +268,25 @@ public class MainController {
             }
         });
 
+        // Setup console message listener to capture edit requests
+        markdownPreview.getEngine().setOnAlert(event -> {
+            String message = event.getData();
+            log.debug("Alert received: {}", message);
+            if (message != null && message.startsWith("edit-daily-note:")) {
+                String dateStr = message.substring("edit-daily-note:".length());
+                log.info("Edit daily note request for date: {}", dateStr);
+                editDailyNote(dateStr);
+            }
+        });
+
         markdownPreview.getEngine().getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
             @Override
             public void changed(ObservableValue<? extends State> observable, Worker.State oldValue, Worker.State newValue) {
                 if (newValue == Worker.State.SUCCEEDED) {
                     // Restore the scroll position
                     markdownPreview.getEngine().executeScript("window.scrollTo(0, " + scrollpos + ");");
+                    // Setup bridge for edit clicks
+                    setupMarkdownBridge();
                 }
             }
         });
@@ -622,9 +635,11 @@ public class MainController {
             sb.append(current.getMarkdownContent());
 
             if (!current.getTaskHistory().isEmpty()) {
-                // Filter entries that have non-empty notes
+                // Filter entries that have non-empty notes or non-zero duration
                 java.util.List<Map.Entry<LocalDate, TaskDailyWork>> notesWithContent = current.getTaskHistory().entrySet().stream()
-                        .filter(entry -> entry.getValue().getNote() != null && !entry.getValue().getNote().isBlank())
+                        .filter(entry -> (entry.getValue().getNote() != null &&
+                                !entry.getValue().getNote().isBlank()) ||
+                                entry.getValue().getDuration().toMinutes() > 0)
                         .sorted(Map.Entry.<LocalDate, TaskDailyWork>comparingByKey().reversed())
                         .toList();
 
@@ -638,10 +653,19 @@ public class MainController {
                         com.chrono.task.model.TaskDailyWork work = entry.getValue();
 
                         java.time.Duration d = work.getDuration();
-                        String durationStr = String.format("%02dh %02dm", d.toHours(), d.toMinutesPart());
+                        String durationStr = String.format("%02d:%02d", d.toHours(), d.toMinutesPart());
 
-                        sb.append("## ").append(date).append(" (").append(durationStr).append(")\n\n");
-                        sb.append(work.getNote()).append("\n\n");
+                        // Add marker that we'll replace with edit icon after HTML rendering
+                        //sb.append("## [EDIT-ICON:").append(date).append("] ")
+                        String editIcon = "<span class='edit-icon' onclick='editDailyNote(\"" + date +
+                                "\")' style='cursor: pointer; color: #007bff; font-size: 1.2em; margin-right: 8px;' title='Edit this note'>&#9998;</span>";
+                        sb.append(editIcon)
+                          .append(date).append(" (").append(durationStr).append(")\n\n");
+                        String note = work.getNote();
+                        if(note != null && !note.isBlank()) {
+                            sb.append(note).append("\n<hr>");
+                            sb.append("\n\n");
+                        }
                     });
                 }
             }
@@ -659,12 +683,119 @@ public class MainController {
                     "pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }" +
                     "h1, h2, h3 { border-bottom: 1px solid #eee; padding-bottom: 5px; }" +
                     "blockquote { border-left: 4px solid #ddd; padding-left: 15px; color: #777; }" +
+                    ".edit-icon:hover { color: #0056b3; text-decoration: underline; }" +
                     "</style></head><body>" + html + "</body></html>";
 
             Object scrollY = markdownPreview.getEngine().executeScript("window.pageYOffset || document.documentElement.scrollTop;");
             this.scrollpos = scrollY instanceof Number ? ((Number) scrollY).doubleValue() : 0.0;
             markdownPreview.getEngine().loadContent(styledHtml);
         }
+    }
+
+    /**
+     * Setup JavaScript bridge to handle edit icon clicks in markdown preview
+     */
+    private void setupMarkdownBridge() {
+        try {
+            // Override the editDailyNote function to use alert() to notify Java
+            markdownPreview.getEngine().executeScript(
+                "window.editDailyNote = function(dateStr) {" +
+                "  alert('edit-daily-note:' + dateStr);" +
+                "};"
+            );
+            log.debug("Markdown bridge setup successfully");
+        } catch (Exception e) {
+            log.error("Failed to setup markdown bridge", e);
+        }
+    }
+
+    /**
+     * Called from JavaScript when edit icon is clicked
+     */
+    public void editDailyNote(String dateStr) {
+        javafx.application.Platform.runLater(() -> {
+            Task current = taskListView.getSelectionModel().getSelectedItem();
+            if (current == null) return;
+
+            try {
+                LocalDate date = LocalDate.parse(dateStr);
+                TaskDailyWork work = current.getTaskHistory().get(date);
+                if (work == null) return;
+
+                showEditDailyNoteDialog(current, date, work);
+            } catch (Exception e) {
+                log.error("Failed to parse date or show dialog", e);
+                showPopup("Error", "Failed to edit daily note: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Show dialog to edit a TaskDailyWork entry
+     */
+    private void showEditDailyNoteDialog(Task task, LocalDate date, TaskDailyWork work) {
+        javafx.scene.control.Dialog<javafx.util.Pair<Long, String>> dialog = new javafx.scene.control.Dialog<>();
+        dialog.setTitle("Edit Daily Note");
+        dialog.setHeaderText("Edit entry for " + date);
+
+        // Set the button types
+        javafx.scene.control.ButtonType okButtonType = new javafx.scene.control.ButtonType("OK", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, javafx.scene.control.ButtonType.CANCEL);
+
+        // Create the form
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
+
+        javafx.scene.control.Label dateLabel = new javafx.scene.control.Label(date.toString());
+        javafx.scene.control.TextField durationField = new javafx.scene.control.TextField();
+        durationField.setPromptText("Duration (minutes)");
+        durationField.setText(String.valueOf(work.getDuration().toMinutes()));
+
+        javafx.scene.control.TextArea noteArea = new javafx.scene.control.TextArea();
+        noteArea.setPromptText("Note");
+        noteArea.setText(work.getNote());
+        noteArea.setPrefRowCount(5);
+        noteArea.setPrefColumnCount(30);
+
+        grid.add(new javafx.scene.control.Label("Date:"), 0, 0);
+        grid.add(dateLabel, 1, 0);
+        grid.add(new javafx.scene.control.Label("Duration (min):"), 0, 1);
+        grid.add(durationField, 1, 1);
+        grid.add(new javafx.scene.control.Label("Note:"), 0, 2);
+        grid.add(noteArea, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+
+        // Convert the result when OK is clicked
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == okButtonType) {
+                try {
+                    long minutes = Long.parseLong(durationField.getText());
+                    return new javafx.util.Pair<>(minutes, noteArea.getText());
+                } catch (NumberFormatException e) {
+                    javafx.application.Platform.runLater(() ->
+                        showPopup("Error", "Invalid duration: must be a number"));
+                    return null;
+                }
+            }
+            return null;
+        });
+
+        // Show dialog and process result
+        Optional<javafx.util.Pair<Long, String>> result = dialog.showAndWait();
+        result.ifPresent(pair -> {
+            if (pair != null) {
+                work.setDuration(java.time.Duration.ofMinutes(pair.getKey()));
+                work.setNote(pair.getValue());
+                refreshMarkdown();
+                // If editing today's note, update the dailyNoteArea
+                if (date.equals(LocalDate.now())) {
+                    dailyNoteArea.setText(pair.getValue());
+                }
+            }
+        });
     }
 
     /**
