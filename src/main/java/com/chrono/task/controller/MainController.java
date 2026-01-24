@@ -6,6 +6,10 @@ import java.util.Optional;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker;
+import javafx.concurrent.Worker.State;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -133,6 +137,7 @@ public class MainController {
 
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
+    private double scrollpos = 0.0;
 
     private final javafx.application.HostServices hostServices;
     private final SettingsStorageService settingsService;
@@ -262,6 +267,17 @@ public class MainController {
                 }
             }
         });
+
+        markdownPreview.getEngine().getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
+            @Override
+            public void changed(ObservableValue<? extends State> observable, Worker.State oldValue, Worker.State newValue) {
+                if (newValue == Worker.State.SUCCEEDED) {
+                    // Restore the scroll position
+                    markdownPreview.getEngine().executeScript("window.scrollTo(0, " + scrollpos + ");");
+                }
+            }
+        });
+
 
         jiraUrlField.textProperty().addListener((_, _, n) -> {
             Task current = taskListView.getSelectionModel().getSelectedItem();
@@ -645,6 +661,8 @@ public class MainController {
                     "blockquote { border-left: 4px solid #ddd; padding-left: 15px; color: #777; }" +
                     "</style></head><body>" + html + "</body></html>";
 
+            Object scrollY = markdownPreview.getEngine().executeScript("window.pageYOffset || document.documentElement.scrollTop;");
+            this.scrollpos = scrollY instanceof Number ? ((Number) scrollY).doubleValue() : 0.0;
             markdownPreview.getEngine().loadContent(styledHtml);
         }
     }
