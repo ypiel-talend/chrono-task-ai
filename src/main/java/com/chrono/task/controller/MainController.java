@@ -1113,11 +1113,20 @@ public class MainController {
                     javafx.collections.ObservableList<Task> items = getListView().getItems();
                     String draggedId = db.getString();
                     Optional<Task> toMove = items.stream().filter(t -> t.getId().equals(draggedId)).findAny();
+                    Task toReplace = items.get(getIndex());
 
                     if (toMove.isPresent()) {
-                        items.remove(toMove.get());
-                        items.add(getIndex(), toMove.get());
-                        taskService.updateOrder(items);
+                        taskService.getTasks().remove(toMove.get());
+                        int newIndex = taskService.getTasks().indexOf(toReplace);
+                        if(newIndex > 0){
+                            taskService.getTasks().add(newIndex, toMove.get());
+                        }
+                        else{
+                            taskService.getTasks().add(toMove.get());
+                        }
+
+                        taskService.updateOrder(taskService.getTasks());
+                        applyFilters();
                         taskListView.getSelectionModel().select(getIndex());
                         success = true;
 
