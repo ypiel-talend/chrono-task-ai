@@ -881,6 +881,7 @@ public class MainController {
         boolean showDuration = historyDurationCheckbox.isSelected();
         boolean showNotes = historyDailyNoteCheckbox.isSelected();
 
+        java.time.Duration totalDuration = java.time.Duration.ZERO;
         for (Task t : taskService.getTasks()) {
             java.time.Duration d = t.getTimeForDate(date);
             if (d.getSeconds() > 120
@@ -889,6 +890,7 @@ public class MainController {
                 if (showDuration) {
                     sb.append(String.format(" : %02dh %02dm", d.toHours(), d.toMinutesPart()));
                 }
+                totalDuration = totalDuration.plus(d);
                 sb.append("\n");
                 if (showNotes) {
                     String note = t.getDailyNote(date);
@@ -898,6 +900,9 @@ public class MainController {
                 }
             }
         }
+
+        sb.append("\n\n----\nTotal duration: ")
+          .append(String.format("%02dh %02dm", totalDuration.toHours(), totalDuration.toMinutesPart()));
         historyTextArea.setText(sb.toString());
     }
 
