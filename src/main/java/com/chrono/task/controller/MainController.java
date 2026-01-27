@@ -1127,7 +1127,7 @@ public class MainController {
                             taskService.getTasks().add(newIndex, toMove.get());
                         }
                         else{
-                            taskService.getTasks().add(toMove.get());
+                            taskService.getTasks().addFirst(toMove.get());
                         }
 
                         taskService.updateOrder(taskService.getTasks());
