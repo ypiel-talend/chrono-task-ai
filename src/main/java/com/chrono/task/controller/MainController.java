@@ -517,6 +517,12 @@ public class MainController {
     }
 
     @FXML
+    public void clearFilter(){
+        filterField.setText("");
+        applyFilters();
+    }
+
+    @FXML
     public void onAddTask() {
         int index = taskService.getTasks().size() + 1;
         String name = "New Task " + index;

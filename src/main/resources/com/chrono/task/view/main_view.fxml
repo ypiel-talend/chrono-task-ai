@@ -63,7 +63,11 @@
                             <items>
                                 <VBox spacing="10.0">
                                     <children>
-                                        <TextField fx:id="filterField" promptText="Filter tasks..."/>
+                                        <HBox HBox.hgrow="ALWAYS">
+                                            <TextField fx:id="filterField" promptText="Filter tasks..." HBox.hgrow="ALWAYS"/>
+                                            <Button maxWidth="30" mnemonicParsing="false"
+                                                    onAction="#clearFilter" text="🗑"/>
+                                        </HBox>
                                         <CheckBox fx:id="showDoneTasksCheckbox" text="Show completed tasks"/>
                                         <ListView fx:id="taskListView" VBox.vgrow="ALWAYS"/>
                                         <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false"
