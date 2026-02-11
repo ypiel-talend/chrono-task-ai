@@ -99,10 +99,16 @@
                                         </HBox>
                                         <HBox spacing="10.0" alignment="CENTER_LEFT">
                                             <children>
-                                                <Label text="Adjust Time (min):"/>
-                                                <TextField fx:id="timeAdjustmentField" prefWidth="80.0"
-                                                           promptText="min"/>
-                                                <Button mnemonicParsing="false" onAction="#onAdjustTime" text="Apply"/>
+                                                <Label text="Daily Work Date:"/>
+                                                <DatePicker fx:id="dailyWorkDatePicker" prefWidth="120.0"/>
+                                            </children>
+                                        </HBox>
+                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label text="Duration (min):"/>
+                                                <TextField fx:id="dailyWorkDurationField" prefWidth="80.0"
+                                                           promptText="minutes"/>
+                                                <Button mnemonicParsing="false" onAction="#onUpdateDailyWork" text="Update"/>
                                             </children>
                                         </HBox>
                                         <HBox spacing="10.0" alignment="CENTER_LEFT">

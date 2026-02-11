@@ -25,11 +25,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.web.WebView;
 import javafx.scene.text.Font;
+import javafx.scene.web.WebView;
 import javafx.util.Duration;
 
- import com.chrono.task.model.Settings;
+import com.chrono.task.model.Settings;
 import com.chrono.task.model.Task;
 import com.chrono.task.model.TaskDailyWork;
 import com.chrono.task.model.TaskStatus;
@@ -39,6 +39,7 @@ import com.chrono.task.service.TaskService;
 import com.chrono.task.service.TimerService;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -131,7 +132,9 @@ public class MainController {
     @FXML
     private Label jiraUpdateLabel;
     @FXML
-    private TextField timeAdjustmentField;
+    private DatePicker dailyWorkDatePicker;
+    @FXML
+    private TextField dailyWorkDurationField;
     @FXML
     private TextField jqlQueryField;
 
@@ -151,12 +154,12 @@ public class MainController {
     private static final String dailyTimerFormat = "Today: %02d:%02d:%02d";
 
     public MainController(TaskService taskService, TimerService timerService,
-            SettingsStorageService settingsService,
-            Settings settings,
-            javafx.application.HostServices hostServices,
-            com.chrono.task.service.JiraService jiraService,
-            com.chrono.task.service.GitBackupService gitBackupService,
-            com.chrono.task.service.JiraRefreshService jiraRefreshService) {
+                          SettingsStorageService settingsService,
+                          Settings settings,
+                          javafx.application.HostServices hostServices,
+                          com.chrono.task.service.JiraService jiraService,
+                          com.chrono.task.service.GitBackupService gitBackupService,
+                          com.chrono.task.service.JiraRefreshService jiraRefreshService) {
         this.taskService = taskService;
         this.timerService = timerService;
         this.settingsService = settingsService;
@@ -428,6 +431,12 @@ public class MainController {
 
         // Initialize End Date Picker
         historyEndDatePicker.setValue(LocalDate.now());
+
+        // Initialize Daily Work Date Picker
+        if (dailyWorkDatePicker != null) {
+            dailyWorkDatePicker.setValue(LocalDate.now());
+            dailyWorkDatePicker.valueProperty().addListener((_, _, newDate) -> loadDailyWorkDetails(newDate));
+        }
     }
 
     @FXML
@@ -548,6 +557,7 @@ public class MainController {
             dailyNoteArea.setText("");
             statusComboBox.setValue(null);
             markdownPreview.getEngine().loadContent("");
+            dailyWorkDurationField.setText("");
             return;
         }
         descriptionField.setText(task.getDescription());
@@ -557,22 +567,60 @@ public class MainController {
         dailyNoteArea.setText(task.getDailyNote(LocalDate.now()));
         statusComboBox.setValue(task.getStatus());
         refreshMarkdown(); // Immediate refresh
+
+        // Load daily work details for the selected date
+        if (dailyWorkDatePicker != null) {
+            loadDailyWorkDetails(dailyWorkDatePicker.getValue());
+        }
+    }
+
+    private void loadDailyWorkDetails(LocalDate date) {
+        Task current = taskListView.getSelectionModel().getSelectedItem();
+        if (current == null || date == null) {
+            return;
+        }
+
+        TaskDailyWork dailyWork = current.getTaskHistory().get(date);
+        if (dailyWork != null) {
+            long minutes = dailyWork.getDuration().toMinutes();
+            dailyWorkDurationField.setText(String.valueOf(minutes));
+            dailyNoteArea.setText(dailyWork.getNote() != null ? dailyWork.getNote() : "");
+        } else {
+            dailyWorkDurationField.setText("0");
+            dailyNoteArea.setText("");
+        }
     }
 
     @FXML
-    public void onAdjustTime() {
+    public void onUpdateDailyWork() {
         Task current = taskListView.getSelectionModel().getSelectedItem();
-        if (current != null) {
-            String text = timeAdjustmentField.getText();
-            try {
-                long minutes = Long.parseLong(text);
-                current.setTime(LocalDate.now(), java.time.Duration.ofMinutes(minutes));
-                updateTimerLabel(); // Refresh view immediately
-                timeAdjustmentField.clear();
-            } catch (NumberFormatException e) {
-                // Ignore or show alert
-                System.err.println("Invalid number: " + text);
+        if (current == null || dailyWorkDatePicker == null) {
+            return;
+        }
+
+        LocalDate selectedDate = dailyWorkDatePicker.getValue();
+        if (selectedDate == null) {
+            showPopup("Validation Error", "Please select a date.");
+            return;
+        }
+
+        try {
+            // Parse and update duration
+            String durationText = dailyWorkDurationField.getText();
+            long minutes = 0;
+            if (durationText != null && !durationText.trim().isEmpty()) {
+                minutes = Long.parseLong(durationText.trim());
             }
+            current.setTime(selectedDate, java.time.Duration.ofMinutes(minutes));
+
+            // Update note
+            String note = dailyNoteArea.getText();
+            current.setDailyNote(selectedDate, note != null ? note : "");
+
+            updateTimerLabel(); // Refresh timer displays
+            showPopup("Updated", "Daily work data updated successfully.");
+        } catch (NumberFormatException e) {
+            showPopup("Validation Error", "Invalid duration: Must be a number.");
         }
     }
 
@@ -583,7 +631,7 @@ public class MainController {
             String textToCopy;
             String jiraUrl = current.getJiraUrl();
             Optional<IssueInfo> issueInfo = jiraService.parseUrl(jiraUrl);
-            String jiraId = issueInfo.orElse(new IssueInfo("", "","N/A")).issueKey();
+            String jiraId = issueInfo.orElse(new IssueInfo("", "", "N/A")).issueKey();
             String description = current.getDescription();
 
             // Copy to clipboard
@@ -969,7 +1017,7 @@ public class MainController {
                     }
                     final String durationStr = showDuration
                             ? String.format(" : %02dh %02dm", totalRangeDuration.toHours(),
-                                    totalRangeDuration.toMinutesPart())
+                            totalRangeDuration.toMinutesPart())
                             : "";
                     final String notesStr = !notesBuilder.isEmpty() ? "\n" + notesBuilder : "";
 
