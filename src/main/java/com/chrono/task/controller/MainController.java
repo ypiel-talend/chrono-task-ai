@@ -503,18 +503,41 @@ public class MainController {
         }
     }
 
-    private void showPopup(String title, String message) {
-        Alert.AlertType type = Alert.AlertType.INFORMATION;
-        if (title.toLowerCase().contains("error") || message.toLowerCase().contains("failed")
-                || message.toLowerCase().contains("invalid")) {
-            type = Alert.AlertType.ERROR;
-        }
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.show();
-    }
+private void showPopup(String title, String message) {
+       String safeTitle = title == null ? "" : title;
+       String safeMessage = message == null ? "" : message;
+
+       Alert.AlertType type = Alert.AlertType.INFORMATION;
+       if (safeTitle.toLowerCase().contains("error")
+               || safeMessage.toLowerCase().contains("failed")
+               || safeMessage.toLowerCase().contains("invalid")) {
+           type = Alert.AlertType.ERROR;
+       }
+
+       if (type == Alert.AlertType.ERROR) {
+           log.error("Popup Error: {} - {}", safeTitle, safeMessage);
+       } else {
+           log.info("Popup Info: {} - {}", safeTitle, safeMessage);
+       }
+
+       Alert alert = new Alert(type);
+       alert.setTitle(safeTitle);
+       alert.setHeaderText(null);
+       alert.setResizable(true);
+
+       TextArea textArea = new TextArea(safeMessage);
+       textArea.setEditable(false);
+       textArea.setWrapText(true);
+       textArea.setPrefWidth(600);
+       textArea.setPrefHeight(400);
+       textArea.setMaxWidth(Double.MAX_VALUE);
+       textArea.setMaxHeight(Double.MAX_VALUE);
+
+       alert.getDialogPane().setContent(textArea);
+       alert.getDialogPane().setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+
+       alert.showAndWait();
+   }
 
     @FXML
     public void clearFilter(){
