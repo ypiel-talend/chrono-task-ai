@@ -9,9 +9,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>25</maven.compiler.release>
+        <maven.compiler.release>27</maven.compiler.release>
         <javafx.version>21.0.1</javafx.version>
-        <lombok.version>1.18.42</lombok.version>
+        <lombok.version>1.18.48</lombok.version>
         <jackson.version>2.16.0</jackson.version>
         <flexmark.version>0.64.8</flexmark.version>
         <junit.version>5.10.1</junit.version>
@@ -109,12 +109,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.1</version>
+                <version>3.15.0</version>
                 <configuration>
-                    <release>25</release>
-                    <compilerArgs>
-                       <arg>--enable-preview</arg>
-                    </compilerArgs>
+                    <!-- compilerId>javac</compilerId -->
+                    <release>27</release>
+                    <enablePreview>true</enablePreview>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
