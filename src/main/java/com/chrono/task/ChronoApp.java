@@ -9,6 +9,10 @@ import com.chrono.task.service.TimerService;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -21,6 +25,7 @@ public class ChronoApp extends Application {
     private GitBackupService gitBackupService;
     private com.chrono.task.service.NotificationService notificationService;
     private com.chrono.task.service.JiraRefreshService jiraRefreshService;
+    private MainController mainController;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -68,6 +73,17 @@ public class ChronoApp extends Application {
 
         // 6. Show UI
         Scene scene = new Scene(loader.load(), 1000, 700);
+        mainController = loader.getController();
+
+        // Ctrl+F12 toggles the terminal panel. An event filter (not an accelerator) so it also
+        // works when the focus is in a WebView (markdown preview, terminal).
+        KeyCombination toggleTerminal = new KeyCodeCombination(KeyCode.F12, KeyCombination.CONTROL_DOWN);
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (toggleTerminal.match(event)) {
+                mainController.toggleTerminal();
+                event.consume();
+            }
+        });
         stage.setScene(scene);
         stage.setTitle("Chrono Task AI");
         stage.show();
@@ -76,6 +92,8 @@ public class ChronoApp extends Application {
     @Override
     public void stop() throws Exception {
         super.stop();
+        if (mainController != null)
+            mainController.shutdown();
         if (taskService != null)
             taskService.shutdown();
         if (timerService != null)

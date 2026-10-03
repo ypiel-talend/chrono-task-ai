@@ -24,4 +24,15 @@ public class Settings {
     private String jqlQuery = "";
 
     private String markdownFont = "System";
+
+    // Terminal panel (Ctrl+F12). Blank values mean "library default".
+    private String terminalShell = "";
+    private String terminalStartDirectory = "";
+    private String terminalTheme = "DARK";
+    private String terminalFontFamily = "";
+    private int terminalFontSize = 14;
+    private int terminalScrollback = 5000;
+    private boolean terminalCopyOnSelect = false;
+    private boolean terminalCtrlCCopies = true;
+    private boolean terminalCtrlVPastes = true;
 }

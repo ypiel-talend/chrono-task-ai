@@ -15,7 +15,16 @@
         <jackson.version>2.16.0</jackson.version>
         <flexmark.version>0.64.8</flexmark.version>
         <junit.version>5.10.1</junit.version>
+        <terminalfx.version>2.0.2</terminalfx.version>
     </properties>
+
+    <repositories>
+        <!-- TerminalFX is not published on Maven Central -->
+        <repository>
+            <id>terminalfx</id>
+            <url>https://github.com/javaterminal/TerminalFX/raw/master/releases</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <!-- JavaFX -->
@@ -38,6 +47,13 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-web</artifactId>
             <version>${javafx.version}</version>
+        </dependency>
+
+        <!-- TerminalFX (embedded terminal, local shell via pty4j) -->
+        <dependency>
+            <groupId>com.kodedu.terminalfx</groupId>
+            <artifactId>terminalfx-local</artifactId>
+            <version>${terminalfx.version}</version>
         </dependency>
 
         <!-- Lombok -->
@@ -131,6 +147,8 @@
                     <mainClass>com.chrono.task.ChronoApp</mainClass>
                     <options>
                          <option>--enable-preview</option>
+                         <!-- JavaFX and JNA (terminal pty4j) load native libraries -->
+                         <option>--enable-native-access=javafx.graphics,javafx.web,com.sun.jna</option>
                         <!--option>-Dchronotaskai.settings.file=C:/tmp/chronotaskai/.chrono-task-ai.settings.test.json</option-->
                     </options>
                 </configuration>
@@ -147,6 +165,7 @@
                         --add-opens com.chrono.task/com.chrono.task.model=org.junit.platform.commons
                         --add-opens com.chrono.task/com.chrono.task.service=org.junit.platform.commons
                         --add-opens com.chrono.task/com.chrono.task.persistence=org.junit.platform.commons
+                        --add-opens com.chrono.task/com.chrono.task.controller=org.junit.platform.commons
                     </argLine>
                 </configuration>
             </plugin>

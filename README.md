@@ -47,7 +47,13 @@ Review your past work.
 *   **Calendar View**: Switch to the **History** tab and select a date from the DatePicker.
 *   **Daily Log**: View a summary of all tasks worked on that day, including durations and daily notes.
 
-### 7. Data Persistence
+### 7. Integrated Terminal
+*   **Toggle**: Press **Ctrl+F12** to show or hide a terminal panel at the bottom of the window.
+*   **Tabs**: Click **"+"** to open more shells, each in its own tab. Closing a tab (or typing `exit`) ends its shell.
+*   **Persistent while hidden**: Hiding the panel keeps the shells running.
+*   **Settings**: Shell, start directory, theme, font, size, scrollback and copy/paste behaviour are in the **Settings** tab.
+
+### 8. Data Persistence
 *   **Auto-Save**: The application automatically saves all tasks and history to `data.json` every 3 minutes.
 
 ## Configuration
@@ -95,6 +101,7 @@ This project follows a clean **MVC (Model-View-Controller)** architecture built 
 *   **JavaFX**: For a responsive desktop UI.
 *   **Jackson**: For robust JSON data binding.
 *   **Flexmark**: For parsing and rendering Markdown.
+*   **TerminalFX** (xterm.js + pty4j): For the integrated terminal.
 *   **Lombok**: To reduce boilerplate code.
 
 ## Requirements

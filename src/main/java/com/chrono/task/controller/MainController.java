@@ -135,6 +135,31 @@ public class MainController {
     @FXML
     private TextField jqlQueryField;
 
+    // Terminal panel (Ctrl+F12)
+    @FXML
+    private javafx.scene.control.SplitPane mainSplitPane;
+    @FXML
+    private TextField terminalShellField;
+    @FXML
+    private TextField terminalStartDirectoryField;
+    @FXML
+    private ComboBox<String> terminalThemeComboBox;
+    @FXML
+    private ComboBox<String> terminalFontComboBox;
+    @FXML
+    private TextField terminalFontSizeField;
+    @FXML
+    private TextField terminalScrollbackField;
+    @FXML
+    private javafx.scene.control.CheckBox terminalCopyOnSelectCheckbox;
+    @FXML
+    private javafx.scene.control.CheckBox terminalCtrlCCopiesCheckbox;
+    @FXML
+    private javafx.scene.control.CheckBox terminalCtrlVPastesCheckbox;
+
+    private TerminalPanel terminalPanel;
+    private double terminalDividerPosition = 0.65;
+
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
     private double scrollpos = 0.0;
@@ -393,6 +418,20 @@ public class MainController {
             markdownFontComboBox.setValue(settings.getMarkdownFont());
         }
 
+        if (terminalShellField != null) {
+            terminalShellField.setText(settings.getTerminalShell());
+            terminalStartDirectoryField.setText(settings.getTerminalStartDirectory());
+            terminalThemeComboBox.getItems().setAll("DARK", "LIGHT");
+            terminalThemeComboBox.setValue(settings.getTerminalTheme());
+            terminalFontComboBox.getItems().setAll(Font.getFamilies());
+            terminalFontComboBox.setValue(settings.getTerminalFontFamily());
+            terminalFontSizeField.setText(String.valueOf(settings.getTerminalFontSize()));
+            terminalScrollbackField.setText(String.valueOf(settings.getTerminalScrollback()));
+            terminalCopyOnSelectCheckbox.setSelected(settings.isTerminalCopyOnSelect());
+            terminalCtrlCCopiesCheckbox.setSelected(settings.isTerminalCtrlCCopies());
+            terminalCtrlVPastesCheckbox.setSelected(settings.isTerminalCtrlVPastes());
+        }
+
         // Bind Pause Button
         if (pauseButton != null) {
             pauseButton.disableProperty().bind(timerService.activeTaskProperty().isNull());
@@ -457,6 +496,21 @@ public class MainController {
         settings.setJqlQuery(jqlQueryField.getText());
 
         try {
+            settings.setTerminalFontSize(Integer.parseInt(terminalFontSizeField.getText().trim()));
+            settings.setTerminalScrollback(Integer.parseInt(terminalScrollbackField.getText().trim()));
+        } catch (NumberFormatException e) {
+            showPopup("Validation Error", "Invalid Terminal font size or scrollback: Must be a number.");
+            return;
+        }
+        settings.setTerminalShell(terminalShellField.getText());
+        settings.setTerminalStartDirectory(terminalStartDirectoryField.getText());
+        settings.setTerminalTheme(terminalThemeComboBox.getValue());
+        settings.setTerminalFontFamily(terminalFontComboBox.getValue());
+        settings.setTerminalCopyOnSelect(terminalCopyOnSelectCheckbox.isSelected());
+        settings.setTerminalCtrlCCopies(terminalCtrlCCopiesCheckbox.isSelected());
+        settings.setTerminalCtrlVPastes(terminalCtrlVPastesCheckbox.isSelected());
+
+        try {
             settingsService.save(settings);
             updateGitStatusLabel();
             if (gitBackupService != null) {
@@ -464,6 +518,9 @@ public class MainController {
             }
             if (jiraRefreshService != null) {
                 jiraRefreshService.restart();
+            }
+            if (terminalPanel != null) {
+                terminalPanel.applySettings();
             }
             showPopup("Settings Saved", "Settings have been saved successfully.");
             // Notify App to possibly restart backup service
@@ -482,6 +539,47 @@ public class MainController {
         java.io.File selectedDirectory = directoryChooser.showDialog(dataStoragePathField.getScene().getWindow());
         if (selectedDirectory != null) {
             dataStoragePathField.setText(selectedDirectory.getAbsolutePath());
+        }
+    }
+
+    @FXML
+    public void onBrowseTerminalStartDirectory() {
+        javafx.stage.DirectoryChooser directoryChooser = new javafx.stage.DirectoryChooser();
+        directoryChooser.setTitle("Select Terminal Start Directory");
+        java.io.File selectedDirectory = directoryChooser.showDialog(terminalStartDirectoryField.getScene().getWindow());
+        if (selectedDirectory != null) {
+            terminalStartDirectoryField.setText(selectedDirectory.getAbsolutePath());
+        }
+    }
+
+    /**
+     * Shows or hides the terminal panel at the bottom of the window (Ctrl+F12).
+     * Hiding keeps the shells running, they are back when the panel is shown again.
+     */
+    public void toggleTerminal() {
+        if (terminalPanel != null && mainSplitPane.getItems().contains(terminalPanel)) {
+            hideTerminal();
+            return;
+        }
+        if (terminalPanel == null) {
+            terminalPanel = new TerminalPanel(settings, this::hideTerminal);
+        }
+        mainSplitPane.getItems().add(terminalPanel);
+        mainSplitPane.setDividerPositions(terminalDividerPosition);
+        terminalPanel.ensureOneTab();
+    }
+
+    private void hideTerminal() {
+        if (terminalPanel != null && mainSplitPane.getItems().contains(terminalPanel)) {
+            terminalDividerPosition = mainSplitPane.getDividerPositions()[0];
+            mainSplitPane.getItems().remove(terminalPanel);
+        }
+    }
+
+    /** Called when the application stops. */
+    public void shutdown() {
+        if (terminalPanel != null) {
+            terminalPanel.closeAll();
         }
     }
 

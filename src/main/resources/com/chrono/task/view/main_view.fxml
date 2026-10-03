@@ -8,6 +8,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
@@ -55,225 +56,266 @@
         </HBox>
     </top>
     <center>
-        <TabPane tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
-            <tabs>
-                <Tab text="Work">
-                    <content>
-                        <SplitPane dividerPositions="0.3">
-                            <items>
-                                <VBox spacing="10.0">
-                                    <children>
-                                        <HBox HBox.hgrow="ALWAYS">
-                                            <TextField fx:id="filterField" promptText="Filter tasks..." HBox.hgrow="ALWAYS"/>
-                                            <Button maxWidth="30" mnemonicParsing="false"
-                                                    onAction="#clearFilter" text="🗑"/>
-                                        </HBox>
-                                        <CheckBox fx:id="showDoneTasksCheckbox" text="Show completed tasks"/>
-                                        <ListView fx:id="taskListView" VBox.vgrow="ALWAYS"/>
-                                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false"
-                                                onAction="#onAddTask" text="Add New Task"/>
-                                    </children>
-                                    <padding>
-                                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
-                                    </padding>
-                                </VBox>
-                                <VBox prefHeight="200.0" prefWidth="100.0" spacing="10.0">
-                                    <children>
-                                        <TextField fx:id="descriptionField" promptText="Task Description"
-                                                   HBox.hgrow="ALWAYS"/>
-                                        <HBox spacing="5.0" alignment="CENTER_LEFT">
+        <!-- Terminal panel (Ctrl+F12) is added as a 2nd item by MainController.toggleTerminal() -->
+        <SplitPane fx:id="mainSplitPane" orientation="VERTICAL" BorderPane.alignment="CENTER">
+            <items>
+                <TabPane tabClosingPolicy="UNAVAILABLE">
+                    <tabs>
+                        <Tab text="Work">
+                            <content>
+                                <SplitPane dividerPositions="0.3">
+                                    <items>
+                                        <VBox spacing="10.0">
                                             <children>
-                                                <TextField fx:id="jiraUrlField" promptText="Jira URL"
+                                                <HBox HBox.hgrow="ALWAYS">
+                                                    <TextField fx:id="filterField" promptText="Filter tasks..." HBox.hgrow="ALWAYS"/>
+                                                    <Button maxWidth="30" mnemonicParsing="false"
+                                                            onAction="#clearFilter" text="🗑"/>
+                                                </HBox>
+                                                <CheckBox fx:id="showDoneTasksCheckbox" text="Show completed tasks"/>
+                                                <ListView fx:id="taskListView" VBox.vgrow="ALWAYS"/>
+                                                <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false"
+                                                        onAction="#onAddTask" text="Add New Task"/>
+                                            </children>
+                                            <padding>
+                                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+                                            </padding>
+                                        </VBox>
+                                        <VBox prefHeight="200.0" prefWidth="100.0" spacing="10.0">
+                                            <children>
+                                                <TextField fx:id="descriptionField" promptText="Task Description"
                                                            HBox.hgrow="ALWAYS"/>
-                                                <Button fx:id="copyJiraUrlButton" mnemonicParsing="false"
-                                                        onAction="#onCopyJiraUrl" text="📋" minWidth="35.0"/>
+                                                <HBox spacing="5.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <TextField fx:id="jiraUrlField" promptText="Jira URL"
+                                                                   HBox.hgrow="ALWAYS"/>
+                                                        <Button fx:id="copyJiraUrlButton" mnemonicParsing="false"
+                                                                onAction="#onCopyJiraUrl" text="📋" minWidth="35.0"/>
+                                                    </children>
+                                                </HBox>
+                                                <HBox spacing="5.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <TextField fx:id="slackUrlField" promptText="Slack URL"
+                                                                   HBox.hgrow="ALWAYS"/>
+                                                        <Button fx:id="copySlackUrlButton" mnemonicParsing="false"
+                                                                onAction="#onCopySlackUrl" text="📋" minWidth="35.0"/>
+                                                    </children>
+                                                </HBox>
+                                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label text="Adjust Time (min):"/>
+                                                        <TextField fx:id="timeAdjustmentField" prefWidth="80.0"
+                                                                   promptText="min"/>
+                                                        <Button mnemonicParsing="false" onAction="#onAdjustTime" text="Apply"/>
+                                                    </children>
+                                                </HBox>
+                                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label text="Status:"/>
+                                                        <ComboBox fx:id="statusComboBox" prefWidth="150.0"/>
+                                                    </children>
+                                                </HBox>
+                                                <Label text="Notes (Markdown)"/>
+                                                <SplitPane dividerPositions="0.15,0.20" orientation="VERTICAL"
+                                                           VBox.vgrow="ALWAYS">
+                                                    <items>
+                                                        <TextArea fx:id="dailyNoteArea" promptText="Daily note for today..."
+                                                                  maxHeight="150"/>
+                                                        <TextArea fx:id="markdownEditor" promptText="Type markdown here..."/>
+                                                        <WebView fx:id="markdownPreview"/>
+                                                    </items>
+                                                </SplitPane>
                                             </children>
-                                        </HBox>
-                                        <HBox spacing="5.0" alignment="CENTER_LEFT">
-                                            <children>
-                                                <TextField fx:id="slackUrlField" promptText="Slack URL"
-                                                           HBox.hgrow="ALWAYS"/>
-                                                <Button fx:id="copySlackUrlButton" mnemonicParsing="false"
-                                                        onAction="#onCopySlackUrl" text="📋" minWidth="35.0"/>
-                                            </children>
-                                        </HBox>
-                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Adjust Time (min):"/>
-                                                <TextField fx:id="timeAdjustmentField" prefWidth="80.0"
-                                                           promptText="min"/>
-                                                <Button mnemonicParsing="false" onAction="#onAdjustTime" text="Apply"/>
-                                            </children>
-                                        </HBox>
-                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Status:"/>
-                                                <ComboBox fx:id="statusComboBox" prefWidth="150.0"/>
-                                            </children>
-                                        </HBox>
-                                        <Label text="Notes (Markdown)"/>
-                                        <SplitPane dividerPositions="0.15,0.20" orientation="VERTICAL"
-                                                   VBox.vgrow="ALWAYS">
-                                            <items>
-                                                <TextArea fx:id="dailyNoteArea" promptText="Daily note for today..."
-                                                          maxHeight="150"/>
-                                                <TextArea fx:id="markdownEditor" promptText="Type markdown here..."/>
-                                                <WebView fx:id="markdownPreview"/>
-                                            </items>
-                                        </SplitPane>
-                                    </children>
-                                    <padding>
-                                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
-                                    </padding>
-                                </VBox>
-                            </items>
-                        </SplitPane>
-                    </content>
-                </Tab>
-                <Tab text="History">
-                    <content>
-                        <VBox spacing="20.0">
-                            <children>
-                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <padding>
+                                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+                                            </padding>
+                                        </VBox>
+                                    </items>
+                                </SplitPane>
+                            </content>
+                        </Tab>
+                        <Tab text="History">
+                            <content>
+                                <VBox spacing="20.0">
                                     <children>
-                                        <javafx.scene.control.CheckBox fx:id="historyRangeCheckbox"
-                                                                       text="Range selection"/>
-                                        <Label text="Start:"/>
-                                        <DatePicker fx:id="historyDatePicker" prefWidth="120.0"/>
-                                        <DatePicker fx:id="historyEndDatePicker" prefWidth="120.0"
-                                                    visible="${historyRangeCheckbox.selected}"
-                                                    managed="${historyRangeCheckbox.selected}"/>
-                                        <Button onAction="#onRefreshHistory" text="↻">
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                            <children>
+                                                <javafx.scene.control.CheckBox fx:id="historyRangeCheckbox"
+                                                                               text="Range selection"/>
+                                                <Label text="Start:"/>
+                                                <DatePicker fx:id="historyDatePicker" prefWidth="120.0"/>
+                                                <DatePicker fx:id="historyEndDatePicker" prefWidth="120.0"
+                                                            visible="${historyRangeCheckbox.selected}"
+                                                            managed="${historyRangeCheckbox.selected}"/>
+                                                <Button onAction="#onRefreshHistory" text="↻">
+                                                    <font>
+                                                        <Font size="14.0"/>
+                                                    </font>
+                                                </Button>
+                                                <javafx.scene.control.CheckBox fx:id="historyDurationCheckbox"
+                                                                               text="with duration" selected="true"/>
+                                                <javafx.scene.control.CheckBox fx:id="historyDailyNoteCheckbox"
+                                                                               text="Include daily note"/>
+                                            </children>
+                                        </HBox>
+                                        <TextArea fx:id="historyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0"
+                                                  VBox.vgrow="ALWAYS">
                                             <font>
-                                                <Font size="14.0"/>
+                                                <Font name="Monospaced Regular" size="14.0"/>
                                             </font>
-                                        </Button>
-                                        <javafx.scene.control.CheckBox fx:id="historyDurationCheckbox"
-                                                                       text="with duration" selected="true"/>
-                                        <javafx.scene.control.CheckBox fx:id="historyDailyNoteCheckbox"
-                                                                       text="Include daily note"/>
+                                        </TextArea>
                                     </children>
-                                </HBox>
-                                <TextArea fx:id="historyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0"
-                                          VBox.vgrow="ALWAYS">
-                                    <font>
-                                        <Font name="Monospaced Regular" size="14.0"/>
-                                    </font>
-                                </TextArea>
-                            </children>
-                            <padding>
-                                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-                            </padding>
-                        </VBox>
-                    </content>
-                </Tab>
-                <Tab text="Settings">
-                    <content>
-                        <VBox spacing="20.0">
-                            <children>
-                                <Label text="Data Storage Path:"/>
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <TextField fx:id="dataStoragePathField" HBox.hgrow="ALWAYS" editable="false"/>
-                                        <Button mnemonicParsing="false" onAction="#onBrowseDataPath" text="Browse..."/>
-                                    </children>
-                                </HBox>
-
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <javafx.scene.control.CheckBox fx:id="jiraRefreshEnabledCheckbox"
-                                                                       text="Enable Jira Auto-Refresh"/>
-                                    </children>
-                                </HBox>
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <Label text="Refresh Every:"/>
-                                        <TextField fx:id="jiraRefreshIntervalField" prefWidth="60.0" promptText="15"/>
-                                        <javafx.scene.control.ComboBox fx:id="jiraRefreshUnitComboBox"/>
-                                    </children>
-                                </HBox>
-
-                                <Label text="Git Backup Settings">
-                                    <font>
-                                        <Font name="System Bold" size="16.0"/>
-                                    </font>
-                                </Label>
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <javafx.scene.control.CheckBox fx:id="gitBackupEnabledCheckbox"
-                                                                       text="Enable Git Backup"/>
-                                    </children>
-                                </HBox>
-                                <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                    <children>
-                                        <Label text="Backup Every:"/>
-                                        <TextField fx:id="gitBackupIntervalField" prefWidth="60.0" promptText="1"/>
-                                        <javafx.scene.control.ComboBox fx:id="gitBackupUnitComboBox"/>
-                                    </children>
-                                </HBox>
-                                <Label fx:id="gitStatusLabel" textFill="RED" visible="false"/>
-
-                                <Label text="Jira Settings">
-                                    <font>
-                                        <Font name="System Bold" size="16.0"/>
-                                    </font>
-                                </Label>
-                                <VBox spacing="5.0">
-                                    <children>
-                                        <Label text="Jira Base URL:"/>
-                                        <TextField fx:id="jiraBaseUrlField" promptText="e.g., https://yourcompany.atlassian.net"/>
-                                    </children>
+                                    <padding>
+                                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+                                    </padding>
                                 </VBox>
-                                <VBox spacing="5.0">
+                            </content>
+                        </Tab>
+                        <Tab text="Settings">
+                            <content>
+                                <ScrollPane fitToWidth="true">
+                                <VBox spacing="20.0">
                                     <children>
-                                        <Label text="Jira Email:"/>
-                                        <TextField fx:id="jiraEmailField" promptText="Enter Jira Email"/>
-                                    </children>
-                                </VBox>
-                                <VBox spacing="5.0">
-                                    <children>
-                                        <Label text="Jira API Token:"/>
-                                        <HBox spacing="5.0" alignment="CENTER_LEFT">
+                                        <Label text="Data Storage Path:"/>
+                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
                                             <children>
-                                                <PasswordField fx:id="jiraApiTokenField"
-                                                               promptText="Enter Jira API Token" HBox.hgrow="ALWAYS"/>
-                                                <TextField fx:id="jiraApiTokenVisibleField"
-                                                           promptText="Enter Jira API Token" visible="false"
-                                                           managed="false" HBox.hgrow="ALWAYS"/>
-                                                <ToggleButton fx:id="tokenVisibilityToggle" text="👁"/>
+                                                <TextField fx:id="dataStoragePathField" HBox.hgrow="ALWAYS" editable="false"/>
+                                                <Button mnemonicParsing="false" onAction="#onBrowseDataPath" text="Browse..."/>
                                             </children>
                                         </HBox>
-                                    </children>
-                                </VBox>
-                                <VBox spacing="5.0">
-                                    <children>
-                                        <Label text="JQL Query for Auto-Creation:"/>
-                                        <TextField fx:id="jqlQueryField" promptText="Enter JQL query (e.g., assignee = currentUser() AND status != Done)"/>
-                                    </children>
-                                </VBox>
 
-                                <Label text="UI Settings">
-                                    <font>
-                                        <Font name="System Bold" size="16.0"/>
-                                    </font>
-                                </Label>
-                                <VBox spacing="5.0">
-                                    <children>
-                                        <Label text="Markdown Font:"/>
-                                        <ComboBox fx:id="markdownFontComboBox" prefWidth="250.0"/>
-                                    </children>
-                                </VBox>
+                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                            <children>
+                                                <javafx.scene.control.CheckBox fx:id="jiraRefreshEnabledCheckbox"
+                                                                               text="Enable Jira Auto-Refresh"/>
+                                            </children>
+                                        </HBox>
+                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label text="Refresh Every:"/>
+                                                <TextField fx:id="jiraRefreshIntervalField" prefWidth="60.0" promptText="15"/>
+                                                <javafx.scene.control.ComboBox fx:id="jiraRefreshUnitComboBox"/>
+                                            </children>
+                                        </HBox>
 
-                                <Button mnemonicParsing="false" onAction="#onSaveSettings" text="Save Settings"/>
-                            </children>
-                            <padding>
-                                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
-                            </padding>
-                        </VBox>
-                    </content>
-                </Tab>
-            </tabs>
-        </TabPane>
+                                        <Label text="Git Backup Settings">
+                                            <font>
+                                                <Font name="System Bold" size="16.0"/>
+                                            </font>
+                                        </Label>
+                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                            <children>
+                                                <javafx.scene.control.CheckBox fx:id="gitBackupEnabledCheckbox"
+                                                                               text="Enable Git Backup"/>
+                                            </children>
+                                        </HBox>
+                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label text="Backup Every:"/>
+                                                <TextField fx:id="gitBackupIntervalField" prefWidth="60.0" promptText="1"/>
+                                                <javafx.scene.control.ComboBox fx:id="gitBackupUnitComboBox"/>
+                                            </children>
+                                        </HBox>
+                                        <Label fx:id="gitStatusLabel" textFill="RED" visible="false"/>
+
+                                        <Label text="Jira Settings">
+                                            <font>
+                                                <Font name="System Bold" size="16.0"/>
+                                            </font>
+                                        </Label>
+                                        <VBox spacing="5.0">
+                                            <children>
+                                                <Label text="Jira Base URL:"/>
+                                                <TextField fx:id="jiraBaseUrlField" promptText="e.g., https://yourcompany.atlassian.net"/>
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="5.0">
+                                            <children>
+                                                <Label text="Jira Email:"/>
+                                                <TextField fx:id="jiraEmailField" promptText="Enter Jira Email"/>
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="5.0">
+                                            <children>
+                                                <Label text="Jira API Token:"/>
+                                                <HBox spacing="5.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <PasswordField fx:id="jiraApiTokenField"
+                                                                       promptText="Enter Jira API Token" HBox.hgrow="ALWAYS"/>
+                                                        <TextField fx:id="jiraApiTokenVisibleField"
+                                                                   promptText="Enter Jira API Token" visible="false"
+                                                                   managed="false" HBox.hgrow="ALWAYS"/>
+                                                        <ToggleButton fx:id="tokenVisibilityToggle" text="👁"/>
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </VBox>
+                                        <VBox spacing="5.0">
+                                            <children>
+                                                <Label text="JQL Query for Auto-Creation:"/>
+                                                <TextField fx:id="jqlQueryField" promptText="Enter JQL query (e.g., assignee = currentUser() AND status != Done)"/>
+                                            </children>
+                                        </VBox>
+
+                                        <Label text="UI Settings">
+                                            <font>
+                                                <Font name="System Bold" size="16.0"/>
+                                            </font>
+                                        </Label>
+                                        <VBox spacing="5.0">
+                                            <children>
+                                                <Label text="Markdown Font:"/>
+                                                <ComboBox fx:id="markdownFontComboBox" prefWidth="250.0"/>
+                                            </children>
+                                        </VBox>
+
+                                        <Label text="Terminal Settings (Ctrl+F12)">
+                                            <font>
+                                                <Font name="System Bold" size="16.0"/>
+                                            </font>
+                                        </Label>
+                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label text="Shell:"/>
+                                                <TextField fx:id="terminalShellField" prefWidth="200.0" promptText="Default ($SHELL)"/>
+                                                <Label text="Start directory:"/>
+                                                <TextField fx:id="terminalStartDirectoryField" HBox.hgrow="ALWAYS" promptText="Home directory"/>
+                                                <Button mnemonicParsing="false" onAction="#onBrowseTerminalStartDirectory" text="Browse..."/>
+                                            </children>
+                                        </HBox>
+                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                            <children>
+                                                <Label text="Theme:"/>
+                                                <ComboBox fx:id="terminalThemeComboBox" prefWidth="100.0"/>
+                                                <Label text="Font:"/>
+                                                <ComboBox fx:id="terminalFontComboBox" prefWidth="200.0" promptText="Default"/>
+                                                <Label text="Size:"/>
+                                                <TextField fx:id="terminalFontSizeField" prefWidth="50.0" promptText="14"/>
+                                                <Label text="Scrollback lines:"/>
+                                                <TextField fx:id="terminalScrollbackField" prefWidth="70.0" promptText="5000"/>
+                                            </children>
+                                        </HBox>
+                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                            <children>
+                                                <CheckBox fx:id="terminalCopyOnSelectCheckbox" text="Copy on select"/>
+                                                <CheckBox fx:id="terminalCtrlCCopiesCheckbox" text="Ctrl+C copies the selection"/>
+                                                <CheckBox fx:id="terminalCtrlVPastesCheckbox" text="Ctrl+V pastes"/>
+                                            </children>
+                                        </HBox>
+
+                                        <Button mnemonicParsing="false" onAction="#onSaveSettings" text="Save Settings"/>
+                                    </children>
+                                    <padding>
+                                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+                                    </padding>
+                                </VBox>
+                                </ScrollPane>
+                            </content>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+            </items>
+        </SplitPane>
     </center>
     <bottom>
         <HBox alignment="CENTER_LEFT" spacing="15.0"

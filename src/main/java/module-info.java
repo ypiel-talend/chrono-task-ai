@@ -9,6 +9,11 @@ module com.chrono.task {
     requires com.fasterxml.jackson.datatype.jsr310;
     requires flexmark;
     requires org.slf4j;
+    requires com.kodedu.terminalfx;
+    requires com.kodedu.terminalfx.local;
+    // pty4j (automatic module) needs the Kotlin stdlib, which is a named module and so is not
+    // resolved unless a module requires it.
+    requires kotlin.stdlib;
 
     requires java.net.http;
     requires java.desktop;
@@ -23,4 +28,4 @@ module com.chrono.task {
     exports com.chrono.task.model;
     exports com.chrono.task.service;
     exports com.chrono.task.persistence;
-}
+}
