@@ -18,40 +18,20 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 <?import javafx.scene.web.WebView?>
 <BorderPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chrono.task.controller.MainController">
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="20.0" style="-fx-background-color: #333; -fx-padding: 10;">
+        <HBox alignment="CENTER_LEFT" styleClass="header-bar">
             <children>
-                <Label fx:id="activeTaskLabel" text="No Active Task" textFill="WHITE">
-                    <font>
-                        <Font size="18.0"/>
-                    </font>
-                </Label>
-                <Label fx:id="todayTimerLabel" text="-" textFill="#00ff11">
-                    <font>
-                        <Font name="Monospaced Bold" size="24.0"/>
-                    </font>
-                </Label>
-                <Label fx:id="monthTimerLabel" text="-" textFill="#cccccc">
-                    <font>
-                        <Font name="Monospaced Regular" size="14.0"/>
-                    </font>
-                </Label>
-                <Label fx:id="activeTimerLabel" text="-" textFill="#cccccc">
-                    <font>
-                        <Font name="Monospaced Regular" size="14.0"/>
-                    </font>
-                </Label>
-                <Label fx:id="totalDailyLabel" text="-" textFill="#dddddd">
-                    <font>
-                        <Font name="Monospaced Bold" size="14.0"/>
-                    </font>
-                </Label>
+                <Label fx:id="activeTaskLabel" text="No Active Task" styleClass="active-task" minWidth="0"
+                       HBox.hgrow="SOMETIMES"/>
+                <Label fx:id="todayTimerLabel" text="-" styleClass="timer-today" minWidth="-Infinity"/>
+                <Label fx:id="monthTimerLabel" text="-" styleClass="timer-secondary" minWidth="-Infinity"/>
+                <Label fx:id="activeTimerLabel" text="-" styleClass="timer-secondary" minWidth="-Infinity"/>
+                <Label fx:id="totalDailyLabel" text="-" styleClass="timer-secondary, timer-total" minWidth="-Infinity"/>
                 <Button fx:id="pauseButton" mnemonicParsing="false" onAction="#onTogglePause" text="Pause"
-                        disable="true"/>
+                        disable="true" styleClass="pause-button" minWidth="-Infinity"/>
             </children>
         </HBox>
     </top>
@@ -59,38 +39,39 @@
         <!-- Terminal panel (Ctrl+F12) is added as a 2nd item by MainController.toggleTerminal() -->
         <SplitPane fx:id="mainSplitPane" orientation="VERTICAL" BorderPane.alignment="CENTER">
             <items>
-                <TabPane tabClosingPolicy="UNAVAILABLE">
+                <TabPane tabClosingPolicy="UNAVAILABLE" styleClass="main-tabs">
                     <tabs>
                         <Tab text="Work">
                             <content>
                                 <SplitPane dividerPositions="0.3">
                                     <items>
-                                        <VBox spacing="10.0">
+                                        <VBox spacing="10.0" styleClass="side-panel">
                                             <children>
-                                                <HBox HBox.hgrow="ALWAYS">
-                                                    <TextField fx:id="filterField" promptText="Filter tasks..." HBox.hgrow="ALWAYS"/>
-                                                    <Button maxWidth="30" mnemonicParsing="false"
-                                                            onAction="#clearFilter" text="🗑"/>
+                                                <HBox HBox.hgrow="ALWAYS" spacing="4.0" alignment="CENTER_LEFT">
+                                                    <TextField fx:id="filterField" promptText="🔍  Filter tasks..." HBox.hgrow="ALWAYS"
+                                                               styleClass="search-field"/>
+                                                    <Button mnemonicParsing="false" styleClass="icon-button"
+                                                            onAction="#clearFilter" text="X"/>
                                                 </HBox>
                                                 <CheckBox fx:id="showDoneTasksCheckbox" text="Show completed tasks"/>
-                                                <ListView fx:id="taskListView" VBox.vgrow="ALWAYS"/>
+                                                <ListView fx:id="taskListView" VBox.vgrow="ALWAYS" styleClass="task-list"/>
                                                 <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false"
-                                                        onAction="#onAddTask" text="Add New Task"/>
+                                                        onAction="#onAddTask" text="＋  Add New Task" styleClass="accent, add-task-button"/>
                                             </children>
                                             <padding>
                                                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
                                             </padding>
                                         </VBox>
-                                        <VBox prefHeight="200.0" prefWidth="100.0" spacing="10.0">
+                                        <VBox prefHeight="200.0" prefWidth="100.0" spacing="10.0" styleClass="detail-panel">
                                             <children>
                                                 <TextField fx:id="descriptionField" promptText="Task Description"
-                                                           HBox.hgrow="ALWAYS"/>
+                                                           HBox.hgrow="ALWAYS" styleClass="title-field"/>
                                                 <HBox spacing="5.0" alignment="CENTER_LEFT">
                                                     <children>
                                                         <TextField fx:id="jiraUrlField" promptText="Jira URL"
                                                                    HBox.hgrow="ALWAYS"/>
                                                         <Button fx:id="copyJiraUrlButton" mnemonicParsing="false"
-                                                                onAction="#onCopyJiraUrl" text="📋" minWidth="35.0"/>
+                                                                onAction="#onCopyJiraUrl" text="📋" minWidth="35.0" styleClass="icon-button"/>
                                                     </children>
                                                 </HBox>
                                                 <HBox spacing="5.0" alignment="CENTER_LEFT">
@@ -98,30 +79,30 @@
                                                         <TextField fx:id="slackUrlField" promptText="Slack URL"
                                                                    HBox.hgrow="ALWAYS"/>
                                                         <Button fx:id="copySlackUrlButton" mnemonicParsing="false"
-                                                                onAction="#onCopySlackUrl" text="📋" minWidth="35.0"/>
+                                                                onAction="#onCopySlackUrl" text="📋" minWidth="35.0" styleClass="icon-button"/>
                                                     </children>
                                                 </HBox>
                                                 <HBox spacing="10.0" alignment="CENTER_LEFT">
                                                     <children>
-                                                        <Label text="Adjust Time (min):"/>
+                                                        <Label text="Adjust Time (min):" styleClass="field-label"/>
                                                         <TextField fx:id="timeAdjustmentField" prefWidth="80.0"
                                                                    promptText="min"/>
-                                                        <Button mnemonicParsing="false" onAction="#onAdjustTime" text="Apply"/>
+                                                        <Button mnemonicParsing="false" onAction="#onAdjustTime" text="Apply" styleClass="accent"/>
                                                     </children>
                                                 </HBox>
                                                 <HBox spacing="10.0" alignment="CENTER_LEFT">
                                                     <children>
-                                                        <Label text="Status:"/>
+                                                        <Label text="Status:" styleClass="field-label"/>
                                                         <ComboBox fx:id="statusComboBox" prefWidth="150.0"/>
                                                     </children>
                                                 </HBox>
-                                                <Label text="Notes (Markdown)"/>
+                                                <Label text="NOTES (MARKDOWN)" styleClass="section-label"/>
                                                 <SplitPane dividerPositions="0.15,0.20" orientation="VERTICAL"
-                                                           VBox.vgrow="ALWAYS">
+                                                           VBox.vgrow="ALWAYS" styleClass="notes-split">
                                                     <items>
                                                         <TextArea fx:id="dailyNoteArea" promptText="Daily note for today..."
                                                                   maxHeight="150"/>
-                                                        <TextArea fx:id="markdownEditor" promptText="Type markdown here..."/>
+                                                        <TextArea fx:id="markdownEditor" promptText="Type markdown here..." styleClass="mono"/>
                                                         <WebView fx:id="markdownPreview"/>
                                                     </items>
                                                 </SplitPane>
@@ -136,22 +117,18 @@
                         </Tab>
                         <Tab text="History">
                             <content>
-                                <VBox spacing="20.0">
+                                <VBox spacing="16.0" styleClass="page">
                                     <children>
-                                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="toolbar-card">
                                             <children>
                                                 <javafx.scene.control.CheckBox fx:id="historyRangeCheckbox"
                                                                                text="Range selection"/>
-                                                <Label text="Start:"/>
+                                                <Label text="Start:" styleClass="field-label"/>
                                                 <DatePicker fx:id="historyDatePicker" prefWidth="120.0"/>
                                                 <DatePicker fx:id="historyEndDatePicker" prefWidth="120.0"
                                                             visible="${historyRangeCheckbox.selected}"
                                                             managed="${historyRangeCheckbox.selected}"/>
-                                                <Button onAction="#onRefreshHistory" text="↻">
-                                                    <font>
-                                                        <Font size="14.0"/>
-                                                    </font>
-                                                </Button>
+                                                <Button onAction="#onRefreshHistory" text="↻  Refresh" styleClass="accent"/>
                                                 <javafx.scene.control.CheckBox fx:id="historyDurationCheckbox"
                                                                                text="with duration" selected="true"/>
                                                 <javafx.scene.control.CheckBox fx:id="historyDailyNoteCheckbox"
@@ -159,11 +136,7 @@
                                             </children>
                                         </HBox>
                                         <TextArea fx:id="historyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0"
-                                                  VBox.vgrow="ALWAYS">
-                                            <font>
-                                                <Font name="Monospaced Regular" size="14.0"/>
-                                            </font>
-                                        </TextArea>
+                                                  VBox.vgrow="ALWAYS" styleClass="mono"/>
                                     </children>
                                     <padding>
                                         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
@@ -173,71 +146,57 @@
                         </Tab>
                         <Tab text="Settings">
                             <content>
-                                <ScrollPane fitToWidth="true">
-                                <VBox spacing="20.0">
+                                <ScrollPane fitToWidth="true" styleClass="settings-scroll">
+                                <VBox spacing="16.0" styleClass="page">
                                     <children>
-                                        <Label text="Data Storage Path:"/>
-                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                        <VBox spacing="10.0" styleClass="card">
                                             <children>
-                                                <TextField fx:id="dataStoragePathField" HBox.hgrow="ALWAYS" editable="false"/>
-                                                <Button mnemonicParsing="false" onAction="#onBrowseDataPath" text="Browse..."/>
+                                                <Label text="Data" styleClass="section-title"/>
+                                                <Label text="Data Storage Path:" styleClass="field-label"/>
+                                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <TextField fx:id="dataStoragePathField" HBox.hgrow="ALWAYS" editable="false"/>
+                                                        <Button mnemonicParsing="false" onAction="#onBrowseDataPath" text="Browse..."/>
+                                                    </children>
+                                                </HBox>
                                             </children>
-                                        </HBox>
+                                        </VBox>
 
-                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                        <VBox spacing="10.0" styleClass="card">
                                             <children>
-                                                <javafx.scene.control.CheckBox fx:id="jiraRefreshEnabledCheckbox"
-                                                                               text="Enable Jira Auto-Refresh"/>
+                                                <Label text="Git Backup" styleClass="section-title"/>
+                                                <CheckBox fx:id="gitBackupEnabledCheckbox" text="Enable Git Backup"/>
+                                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label text="Backup Every:" styleClass="field-label"/>
+                                                        <TextField fx:id="gitBackupIntervalField" prefWidth="60.0" promptText="1"/>
+                                                        <ComboBox fx:id="gitBackupUnitComboBox"/>
+                                                    </children>
+                                                </HBox>
+                                                <Label fx:id="gitStatusLabel" styleClass="error-label" visible="false"/>
                                             </children>
-                                        </HBox>
-                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Refresh Every:"/>
-                                                <TextField fx:id="jiraRefreshIntervalField" prefWidth="60.0" promptText="15"/>
-                                                <javafx.scene.control.ComboBox fx:id="jiraRefreshUnitComboBox"/>
-                                            </children>
-                                        </HBox>
+                                        </VBox>
 
-                                        <Label text="Git Backup Settings">
-                                            <font>
-                                                <Font name="System Bold" size="16.0"/>
-                                            </font>
-                                        </Label>
-                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                        <VBox spacing="10.0" styleClass="card">
                                             <children>
-                                                <javafx.scene.control.CheckBox fx:id="gitBackupEnabledCheckbox"
-                                                                               text="Enable Git Backup"/>
-                                            </children>
-                                        </HBox>
-                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Backup Every:"/>
-                                                <TextField fx:id="gitBackupIntervalField" prefWidth="60.0" promptText="1"/>
-                                                <javafx.scene.control.ComboBox fx:id="gitBackupUnitComboBox"/>
-                                            </children>
-                                        </HBox>
-                                        <Label fx:id="gitStatusLabel" textFill="RED" visible="false"/>
-
-                                        <Label text="Jira Settings">
-                                            <font>
-                                                <Font name="System Bold" size="16.0"/>
-                                            </font>
-                                        </Label>
-                                        <VBox spacing="5.0">
-                                            <children>
-                                                <Label text="Jira Base URL:"/>
+                                                <Label text="Jira" styleClass="section-title"/>
+                                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <CheckBox fx:id="jiraRefreshEnabledCheckbox" text="Enable Jira Auto-Refresh"/>
+                                                        <Label text="Refresh Every:" styleClass="field-label">
+                                                            <HBox.margin>
+                                                                <Insets left="20.0"/>
+                                                            </HBox.margin>
+                                                        </Label>
+                                                        <TextField fx:id="jiraRefreshIntervalField" prefWidth="60.0" promptText="15"/>
+                                                        <ComboBox fx:id="jiraRefreshUnitComboBox"/>
+                                                    </children>
+                                                </HBox>
+                                                <Label text="Jira Base URL:" styleClass="field-label"/>
                                                 <TextField fx:id="jiraBaseUrlField" promptText="e.g., https://yourcompany.atlassian.net"/>
-                                            </children>
-                                        </VBox>
-                                        <VBox spacing="5.0">
-                                            <children>
-                                                <Label text="Jira Email:"/>
+                                                <Label text="Jira Email:" styleClass="field-label"/>
                                                 <TextField fx:id="jiraEmailField" promptText="Enter Jira Email"/>
-                                            </children>
-                                        </VBox>
-                                        <VBox spacing="5.0">
-                                            <children>
-                                                <Label text="Jira API Token:"/>
+                                                <Label text="Jira API Token:" styleClass="field-label"/>
                                                 <HBox spacing="5.0" alignment="CENTER_LEFT">
                                                     <children>
                                                         <PasswordField fx:id="jiraApiTokenField"
@@ -248,62 +207,65 @@
                                                         <ToggleButton fx:id="tokenVisibilityToggle" text="👁"/>
                                                     </children>
                                                 </HBox>
-                                            </children>
-                                        </VBox>
-                                        <VBox spacing="5.0">
-                                            <children>
-                                                <Label text="JQL Query for Auto-Creation:"/>
+                                                <Label text="JQL Query for Auto-Creation:" styleClass="field-label"/>
                                                 <TextField fx:id="jqlQueryField" promptText="Enter JQL query (e.g., assignee = currentUser() AND status != Done)"/>
                                             </children>
                                         </VBox>
 
-                                        <Label text="UI Settings">
-                                            <font>
-                                                <Font name="System Bold" size="16.0"/>
-                                            </font>
-                                        </Label>
-                                        <VBox spacing="5.0">
+                                        <VBox spacing="10.0" styleClass="card">
                                             <children>
-                                                <Label text="Markdown Font:"/>
-                                                <ComboBox fx:id="markdownFontComboBox" prefWidth="250.0"/>
+                                                <Label text="Appearance" styleClass="section-title"/>
+                                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label text="Theme:" styleClass="field-label"/>
+                                                        <ComboBox fx:id="uiThemeComboBox" prefWidth="120.0"/>
+                                                        <Label text="Markdown Font:" styleClass="field-label">
+                                                            <HBox.margin>
+                                                                <Insets left="20.0"/>
+                                                            </HBox.margin>
+                                                        </Label>
+                                                        <ComboBox fx:id="markdownFontComboBox" prefWidth="250.0"/>
+                                                    </children>
+                                                </HBox>
                                             </children>
                                         </VBox>
 
-                                        <Label text="Terminal Settings (Ctrl+F12)">
-                                            <font>
-                                                <Font name="System Bold" size="16.0"/>
-                                            </font>
-                                        </Label>
-                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                        <VBox spacing="10.0" styleClass="card">
                                             <children>
-                                                <Label text="Shell:"/>
-                                                <TextField fx:id="terminalShellField" prefWidth="200.0" promptText="Default ($SHELL)"/>
-                                                <Label text="Start directory:"/>
-                                                <TextField fx:id="terminalStartDirectoryField" HBox.hgrow="ALWAYS" promptText="Home directory"/>
-                                                <Button mnemonicParsing="false" onAction="#onBrowseTerminalStartDirectory" text="Browse..."/>
+                                                <Label text="Terminal (Ctrl+F12)" styleClass="section-title"/>
+                                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label text="Shell:" styleClass="field-label"/>
+                                                        <TextField fx:id="terminalShellField" prefWidth="200.0" promptText="Default ($SHELL)"/>
+                                                        <Label text="Start directory:" styleClass="field-label"/>
+                                                        <TextField fx:id="terminalStartDirectoryField" HBox.hgrow="ALWAYS" promptText="Home directory"/>
+                                                        <Button mnemonicParsing="false" onAction="#onBrowseTerminalStartDirectory" text="Browse..."/>
+                                                    </children>
+                                                </HBox>
+                                                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <Label text="Theme:" styleClass="field-label"/>
+                                                        <ComboBox fx:id="terminalThemeComboBox" prefWidth="100.0"/>
+                                                        <Label text="Font:" styleClass="field-label"/>
+                                                        <ComboBox fx:id="terminalFontComboBox" prefWidth="200.0" promptText="Default"/>
+                                                        <Label text="Size:" styleClass="field-label"/>
+                                                        <TextField fx:id="terminalFontSizeField" prefWidth="50.0" promptText="14"/>
+                                                        <Label text="Scrollback lines:" styleClass="field-label"/>
+                                                        <TextField fx:id="terminalScrollbackField" prefWidth="70.0" promptText="5000"/>
+                                                    </children>
+                                                </HBox>
+                                                <HBox spacing="16.0" alignment="CENTER_LEFT">
+                                                    <children>
+                                                        <CheckBox fx:id="terminalCopyOnSelectCheckbox" text="Copy on select"/>
+                                                        <CheckBox fx:id="terminalCtrlCCopiesCheckbox" text="Ctrl+C copies the selection"/>
+                                                        <CheckBox fx:id="terminalCtrlVPastesCheckbox" text="Ctrl+V pastes"/>
+                                                    </children>
+                                                </HBox>
                                             </children>
-                                        </HBox>
-                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                            <children>
-                                                <Label text="Theme:"/>
-                                                <ComboBox fx:id="terminalThemeComboBox" prefWidth="100.0"/>
-                                                <Label text="Font:"/>
-                                                <ComboBox fx:id="terminalFontComboBox" prefWidth="200.0" promptText="Default"/>
-                                                <Label text="Size:"/>
-                                                <TextField fx:id="terminalFontSizeField" prefWidth="50.0" promptText="14"/>
-                                                <Label text="Scrollback lines:"/>
-                                                <TextField fx:id="terminalScrollbackField" prefWidth="70.0" promptText="5000"/>
-                                            </children>
-                                        </HBox>
-                                        <HBox spacing="10.0" alignment="CENTER_LEFT">
-                                            <children>
-                                                <CheckBox fx:id="terminalCopyOnSelectCheckbox" text="Copy on select"/>
-                                                <CheckBox fx:id="terminalCtrlCCopiesCheckbox" text="Ctrl+C copies the selection"/>
-                                                <CheckBox fx:id="terminalCtrlVPastesCheckbox" text="Ctrl+V pastes"/>
-                                            </children>
-                                        </HBox>
+                                        </VBox>
 
-                                        <Button mnemonicParsing="false" onAction="#onSaveSettings" text="Save Settings"/>
+                                        <Button mnemonicParsing="false" onAction="#onSaveSettings" text="💾  Save Settings"
+                                                styleClass="accent" defaultButton="false"/>
                                     </children>
                                     <padding>
                                         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
@@ -318,29 +280,16 @@
         </SplitPane>
     </center>
     <bottom>
-        <HBox alignment="CENTER_LEFT" spacing="15.0"
-              style="-fx-background-color: #222; -fx-padding: 5 10 5 10; -fx-border-color: #444; -fx-border-width: 1 0 0 0;">
+        <HBox alignment="CENTER_LEFT" styleClass="status-bar">
             <children>
                 <HBox HBox.hgrow="ALWAYS">
                     <children>
-                        <Label fx:id="jiraUpdateLabel" text="Updating Jira's status..." textFill="#aaaaaa"
-                               visible="false" managed="false">
-                            <font>
-                                <Font size="11.0"/>
-                            </font>
-                        </Label>
+                        <Label fx:id="jiraUpdateLabel" text="⟳ Updating Jira's status..." styleClass="jira-update"
+                               visible="false" managed="false"/>
                     </children>
                 </HBox>
-                <Label fx:id="lastSaveLabel" text="Last save: -" textFill="#aaaaaa">
-                    <font>
-                        <Font size="11.0"/>
-                    </font>
-                </Label>
-                <Label fx:id="lastCommitLabel" text="Last commit: -" textFill="#aaaaaa">
-                    <font>
-                        <Font size="11.0"/>
-                    </font>
-                </Label>
+                <Label fx:id="lastSaveLabel" text="Last save: -"/>
+                <Label fx:id="lastCommitLabel" text="Last commit: -"/>
             </children>
         </HBox>
     </bottom>

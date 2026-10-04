@@ -16,6 +16,7 @@
         <flexmark.version>0.64.8</flexmark.version>
         <junit.version>5.10.1</junit.version>
         <terminalfx.version>2.0.2</terminalfx.version>
+        <atlantafx.version>3.0.0</atlantafx.version>
     </properties>
 
     <repositories>
@@ -54,6 +55,19 @@
             <groupId>com.kodedu.terminalfx</groupId>
             <artifactId>terminalfx-local</artifactId>
             <version>${terminalfx.version}</version>
+        </dependency>
+
+        <!-- AtlantaFX (modern CSS themes: Primer dark/light) -->
+        <dependency>
+            <groupId>io.github.mkpaz</groupId>
+            <artifactId>atlantafx-base</artifactId>
+            <version>${atlantafx.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Lombok -->

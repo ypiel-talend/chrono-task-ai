@@ -1,0 +1,322 @@
+/*
+ * Chrono Task AI - application styling on top of the AtlantaFX Primer theme (dark or light).
+ * Only AtlantaFX looked-up colors (-color-*) are used, so the same rules work for both themes.
+ * The root gets "theme-dark" or "theme-light" (ThemeManager) for the few theme-specific tweaks.
+ */
+
+.root {
+    -fx-font-size: 13px;
+}
+
+/* ---------------------------------------------------------------- header (timer bar) */
+
+.header-bar {
+    -fx-padding: 12 18 12 18;
+    -fx-spacing: 22;
+    -fx-background-color: linear-gradient(to right, -color-accent-emphasis, derive(-color-accent-emphasis, -45%));
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 12, 0, 0, 2);
+}
+
+.theme-light .header-bar {
+    -fx-background-color: linear-gradient(to right, #1f6feb, #6e40c9);
+}
+
+.header-bar .active-task {
+    -fx-text-fill: white;
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+}
+
+.header-bar .timer-today {
+    -fx-text-fill: #7ee787;
+    -fx-font-family: "JetBrains Mono", "Fira Code", "DejaVu Sans Mono", "Monospaced";
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-background-color: rgba(0, 0, 0, 0.25);
+    -fx-background-radius: 8;
+    -fx-padding: 2 12 2 12;
+    -fx-effect: dropshadow(gaussian, rgba(126, 231, 135, 0.55), 10, 0.2, 0, 0);
+}
+
+.header-bar .timer-secondary {
+    -fx-text-fill: rgba(255, 255, 255, 0.78);
+    -fx-font-family: "JetBrains Mono", "Fira Code", "DejaVu Sans Mono", "Monospaced";
+    -fx-font-size: 13px;
+}
+
+.header-bar .timer-total {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.header-bar .pause-button {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+    -fx-border-color: rgba(255, 255, 255, 0.35);
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 5 18 5 18;
+    -fx-cursor: hand;
+}
+
+.header-bar .pause-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.28);
+}
+
+.header-bar .pause-button:disabled {
+    -fx-opacity: 0.45;
+}
+
+/* ---------------------------------------------------------------- main tabs */
+
+.main-tabs > .tab-header-area {
+    -fx-padding: 6 10 0 10;
+}
+
+.main-tabs > .tab-header-area > .headers-region > .tab {
+    -fx-padding: 4 18 4 18;
+}
+
+.main-tabs > .tab-header-area > .headers-region > .tab > .tab-container > .tab-label {
+    -fx-font-weight: bold;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-padding: 0 1 0 1;
+    -fx-background-color: -color-border-default;
+}
+
+.split-pane:vertical > .split-pane-divider {
+    -fx-padding: 1 0 1 0;
+}
+
+/* ---------------------------------------------------------------- side panel / task list */
+
+.side-panel {
+    -fx-background-color: -color-bg-subtle;
+}
+
+.task-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 2 0 2 0;
+}
+
+.task-list > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 9 10 9 12;
+    -fx-background-insets: 2 4 2 4;
+    -fx-background-radius: 8;
+    -fx-border-width: 0;
+}
+
+.task-list > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover {
+    -fx-background-color: -color-bg-default;
+}
+
+.task-list > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -color-accent-emphasis, -color-bg-subtle, -color-accent-subtle;
+    -fx-background-insets: 2 4 2 4, 2 4 2 8, 2 4 2 8;
+    -fx-text-fill: -color-fg-default;
+}
+
+.task-list .list-cell:filled:selected .task-label {
+    -fx-text-fill: -color-fg-default;
+    -fx-font-weight: bold;
+}
+
+.task-list > .virtual-flow > .clipped-container > .sheet > .list-cell.new-auto {
+    -fx-background-color: -color-warning-emphasis, -color-bg-subtle, -color-warning-subtle;
+    -fx-background-insets: 2 4 2 4, 2 4 2 8, 2 4 2 8;
+}
+
+.task-list .list-cell.new-auto .task-label {
+    -fx-font-weight: bold;
+}
+
+.task-list > .virtual-flow > .clipped-container > .sheet > .list-cell.task-active {
+    -fx-background-color: -color-success-emphasis, -color-bg-subtle, -color-success-subtle;
+    -fx-background-insets: 2 4 2 4, 2 4 2 8, 2 4 2 8;
+}
+
+.task-list .list-cell.task-active .task-label {
+    -fx-text-fill: -color-success-fg;
+    -fx-font-weight: bold;
+}
+
+.task-label {
+    -fx-text-fill: -color-fg-default;
+}
+
+/* status badges */
+.status-pill {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-background-color: -color-neutral-muted;
+    -fx-border-color: -color-border-default;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.status-pill.status-todo {
+    -fx-background-color: -color-neutral-subtle;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.status-pill.status-in_progress {
+    -fx-background-color: -color-accent-subtle;
+    -fx-border-color: -color-accent-muted;
+    -fx-text-fill: -color-accent-fg;
+}
+
+.status-pill.status-validation {
+    -fx-background-color: -color-warning-subtle;
+    -fx-border-color: -color-warning-muted;
+    -fx-text-fill: -color-warning-fg;
+}
+
+.status-pill.status-done {
+    -fx-background-color: -color-success-subtle;
+    -fx-border-color: -color-success-muted;
+    -fx-text-fill: -color-success-fg;
+}
+
+.status-pill.status-to_delete,
+.status-pill.status-unknown {
+    -fx-background-color: -color-danger-subtle;
+    -fx-border-color: -color-danger-muted;
+    -fx-text-fill: -color-danger-fg;
+}
+
+/* small transparent emoji buttons */
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 6;
+    -fx-padding: 2 5 2 5;
+    -fx-cursor: hand;
+    -fx-effect: null;
+}
+
+.icon-button:hover {
+    -fx-background-color: -color-accent-subtle;
+}
+
+.icon-button:pressed {
+    -fx-background-color: -color-accent-muted;
+}
+
+.search-field {
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-padding: 6 12 6 12;
+}
+
+.add-task-button {
+    -fx-padding: 8 12 8 12;
+    -fx-font-weight: bold;
+}
+
+/* ---------------------------------------------------------------- detail panel */
+
+.detail-panel {
+    -fx-background-color: -color-bg-default;
+}
+
+.title-field {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 10 8 10;
+}
+
+.field-label {
+    -fx-text-fill: -color-fg-muted;
+}
+
+.section-label {
+    -fx-text-fill: -color-fg-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.notes-split {
+    -fx-background-color: -color-border-default;
+    -fx-background-radius: 8;
+    -fx-padding: 1;
+}
+
+.mono {
+    -fx-font-family: "JetBrains Mono", "Fira Code", "DejaVu Sans Mono", "Monospaced";
+    -fx-font-size: 13px;
+}
+
+/* ---------------------------------------------------------------- history & settings */
+
+.page {
+    -fx-background-color: -color-bg-default;
+}
+
+.toolbar-card,
+.card {
+    -fx-background-color: -color-bg-subtle;
+    -fx-border-color: -color-border-default;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 14 16 14 16;
+}
+
+.toolbar-card {
+    -fx-padding: 10 14 10 14;
+}
+
+.section-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-accent-fg;
+    -fx-padding: 0 0 4 0;
+}
+
+.settings-scroll,
+.settings-scroll > .viewport {
+    -fx-background-color: -color-bg-default;
+}
+
+.error-label {
+    -fx-text-fill: -color-danger-fg;
+}
+
+/* ---------------------------------------------------------------- status bar */
+
+.status-bar {
+    -fx-background-color: -color-bg-subtle;
+    -fx-border-color: -color-border-default;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 4 12 4 12;
+    -fx-spacing: 18;
+}
+
+.status-bar .label {
+    -fx-text-fill: -color-fg-muted;
+    -fx-font-size: 11px;
+}
+
+.status-bar .jira-update {
+    -fx-text-fill: -color-accent-fg;
+    -fx-font-weight: bold;
+}
+
+/* ---------------------------------------------------------------- misc */
+
+.scroll-bar:vertical,
+.scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar > .thumb {
+    -fx-background-radius: 6;
+}

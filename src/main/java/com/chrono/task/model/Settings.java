@@ -24,6 +24,8 @@ public class Settings {
     private String jqlQuery = "";
 
     private String markdownFont = "System";
+    // Application look: "DARK" or "LIGHT" (see ThemeManager).
+    private String uiTheme = "DARK";
 
     // Terminal panel (Ctrl+F12). Blank values mean "library default".
     private String terminalShell = "";

@@ -65,13 +65,16 @@ public class ChronoApp extends Application {
         jiraRefreshService = new com.chrono.task.service.JiraRefreshService(jiraService, taskService, settings);
         jiraRefreshService.start();
 
-        // 5. Setup Loader with Controller Factory
+        // 5. Theme first, so the controller sees it while initializing
+        com.chrono.task.ui.ThemeManager.apply(null, settings.getUiTheme());
+
+        // 6. Setup Loader with Controller Factory
         FXMLLoader loader = new FXMLLoader(ChronoApp.class.getResource("view/main_view.fxml"));
         loader.setControllerFactory(
                 param -> new MainController(taskService, timerService, settingsService, settings, getHostServices(),
                         jiraService, gitBackupService, jiraRefreshService));
 
-        // 6. Show UI
+        // 7. Show UI
         Scene scene = new Scene(loader.load(), 1000, 700);
         mainController = loader.getController();
 
@@ -84,8 +87,11 @@ public class ChronoApp extends Application {
                 event.consume();
             }
         });
+        com.chrono.task.ui.ThemeManager.apply(scene, settings.getUiTheme());
         stage.setScene(scene);
         stage.setTitle("Chrono Task AI");
+        stage.setMinWidth(800);
+        stage.setMinHeight(500);
         stage.show();
     }
 

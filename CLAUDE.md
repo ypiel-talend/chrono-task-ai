@@ -20,7 +20,7 @@ Single Maven module, JPMS module `com.chrono.task`. ~3k LOC. Commit messages are
 | `model/Task` | Core entity (Lombok `@Data @Builder`). `taskHistory: Map<LocalDate, TaskDailyWork>`; helpers `addTime/setTime/getTimeForDate/getDurationToday/getDurationLast30Days/getTotalTime`, daily notes, labels (`getLabel/getDisplayLabel/getHistoryLabel`), `cleanupHistory()` (drops past days < 2 min with no note). `@JsonIgnore` on computed getters. `tag="new_auto"` marks JQL-created tasks. |
 | `model/TaskDailyWork` | duration, note, status per day. |
 | `model/TaskStatus` | TODO, IN_PROGRESS, VALIDATION, DONE, NONE, UNKNOWN, TO_DELETE. `NONE` = hide badge, not refreshed from Jira. `TO_DELETE` = excluded on save (soft delete). |
-| `model/Settings` | Jira creds/base URL/JQL/refresh interval, data path, git backup interval, markdown font, `terminal*` (shell, start dir, theme, font, size, scrollback, copy/paste flags). |
+| `model/Settings` | Jira creds/base URL/JQL/refresh interval, data path, git backup interval, markdown font, `uiTheme` (DARK/LIGHT), `terminal*` (shell, start dir, theme, font, size, scrollback, copy/paste flags). |
 | `model/DataStore` | `{ tasks: [...] }` root of `data.json`. |
 | `persistence/JsonStorageService` | Jackson + JavaTimeModule ↔ `<dataDir>/data.json`. Implements `StorageService` (interface, mockable). |
 | `persistence/SettingsStorageService` | `~/.chrono-task-ai.settings.json` (override by sysprop `chronotaskai.settings.file`). Plain mapper (ChronoUnit as string). |
@@ -31,7 +31,9 @@ Single Maven module, JPMS module `com.chrono.task`. ~3k LOC. Commit messages are
 | `service/GitService` / `GitBackupService` | Shells out to `git` in data dir: init, `add data.json`, commit "Backup <ts>". Scheduled per settings; `lastCommitMessageProperty`. |
 | `service/NotificationService` | AWT SystemTray notifications (fallback stderr). |
 | `controller/MainController` | **~1200-line god class**: all UI logic for the 3 tabs + status bar, markdown rendering, history report, drag & drop list cell (`TaskListCell` inner class), dialogs (`showPopup`). |
+| `ui/ThemeManager` | Look & feel: AtlantaFX Primer dark/light as user-agent stylesheet (global, dialogs included) + `view/app.css`; root class `theme-dark`/`theme-light`; `markdownCss(dark, font)` builds the WebView preview CSS. `style(Dialog)` for dialogs. |
 | `controller/TerminalPanel` | Bottom terminal panel (Ctrl+F12): `TabPane` of TerminalFX `TerminalView` + `TerminalSession(LocalShell)` per tab, "+"/"✕" toolbar, clipboard wiring (`onCopy`/`onPasteRequested`), `applySettings()` (live look), `closeAll()`. Static `buildLook`/`buildShellSpec` map `Settings` → TerminalFX (unit tested). |
+| `resources/com/chrono/task/view/app.css` | App styling on top of AtlantaFX; only AtlantaFX looked-up colors (`-color-*`) so one file serves both themes. Classes: `header-bar`, `timer-*`, `task-list` (+ cell `new-auto`/`task-active`), `status-pill status-<status>`, `icon-button`, `card`, `section-title`, `status-bar`… |
 | `resources/com/chrono/task/view/main_view.fxml` | Whole UI: top timer bar, TabPane (Work / History / Settings), bottom status bar. `fx:id`s map 1:1 to `@FXML` fields in MainController. |
 | `module-info.java` | Must `opens` packages to javafx.fxml / jackson; add `requires` for any new library. |
 
@@ -42,6 +44,7 @@ Single Maven module, JPMS module `com.chrono.task`. ~3k LOC. Commit messages are
 - **Markdown preview**: WebView re-rendered every 3 s (flexmark) from `markdownContent` + "Daily Notes" section; scroll position preserved; edit icons call JS `editDailyNote(date)` → `alert('edit-daily-note:<date>')` → `onAlert` handler opens edit dialog.
 - **History tab**: single day (text list, >2 min or note) or date range (tab-separated report; Jira tasks re-fetched for type/status).
 - **Threading**: background threads (timer, autosave, Jira, git) all daemon; UI updates go through `Platform.runLater`. Timer and autosave touch `Task` objects without synchronization.
+- **Theme**: `ChronoApp` applies `settings.uiTheme` before loading FXML; the Settings > Appearance combo switches live (`MainController.applyTheme`), persisted on Save.
 - **Settings save** (`onSaveSettings`) persists and restarts git backup + Jira refresh services, and re-applies the terminal look to open tabs.
 - **Terminal (Ctrl+F12)**: scene-level `KeyEvent` filter in `ChronoApp` (works even when a WebView has focus; the `TerminalView` also claims Ctrl+F12) → `MainController.toggleTerminal()` adds/removes the lazily created `TerminalPanel` as 2nd item of `mainSplitPane` (center is a vertical SplitPane). Hiding keeps shells alive; last tab closed/`exit` hides the panel; `ChronoApp.stop()` → `MainController.shutdown()` → `closeAll()`.
 
@@ -50,7 +53,7 @@ Single Maven module, JPMS module `com.chrono.task`. ~3k LOC. Commit messages are
 - `<dataStoragePath>/data.json` (default `~/.chrono-task-ai/`) — tasks; optional git repo there.
 
 ## Tests (src/test/java, JUnit 5 + Mockito)
-`TaskTest`, `TaskServiceTest` (mocked StorageService), `TimerServiceTest`, `JiraServiceTest` (URL regex only), `JsonStorageServiceTest`, `TerminalPanelSettingsTest` (settings → TerminalFX mapping, no FX toolkit). No UI tests. Surefire argLine adds `--add-reads/--add-opens` for `com.chrono.task`, but tests actually run on the classpath (surefire prints "Unknown module: com.chrono.task"), so those flags are no-ops. `mvn clean verify` passes on JDK 27; the many `sun.misc.Unsafe` / dynamic-agent warnings (Lombok, Mockito's byte-buddy) are expected noise.
+`TaskTest`, `TaskServiceTest` (mocked StorageService), `TimerServiceTest`, `JiraServiceTest` (URL regex only), `JsonStorageServiceTest`, `TerminalPanelSettingsTest` (settings → TerminalFX mapping, no FX toolkit), `ThemeManagerTest`. No UI tests. Surefire argLine adds `--add-reads/--add-opens` for `com.chrono.task`, but tests actually run on the classpath (surefire prints "Unknown module: com.chrono.task"), so those flags are no-ops. `mvn clean verify` passes on JDK 27; the many `sun.misc.Unsafe` / dynamic-agent warnings (Lombok, Mockito's byte-buddy) are expected noise.
 
 ## Conventions
 - Lombok for models (`@Data @Builder @NoArgsConstructor @AllArgsConstructor`, `@Builder.Default` for initialized fields); `@Slf4j` for logging (some legacy `System.out/err` remain).
@@ -58,6 +61,7 @@ Single Maven module, JPMS module `com.chrono.task`. ~3k LOC. Commit messages are
 - Unnamed lambda params `_` (Java 22+). Many fully-qualified class names inline instead of imports — existing style, not required for new code.
 - Validation errors surface via `IllegalArgumentException` from TaskService → caught in controller → `showPopup`.
 - New persisted field on `Task`: just add it (class has `@JsonIgnoreProperties(ignoreUnknown = true)`); computed getters need `@JsonIgnore`.
+- Styling: no inline `style=`/`textFill`/`<font>`; use `styleClass` + rules in `app.css` with AtlantaFX variables (also `accent`, `flat`… AtlantaFX classes).
 - New UI control: add to FXML with `fx:id` + `@FXML` field / `onAction="#method"` in MainController.
 
 ## Known weak spots / improvement candidates

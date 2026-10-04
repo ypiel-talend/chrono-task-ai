@@ -37,6 +37,7 @@ import com.chrono.task.persistence.SettingsStorageService;
 import com.chrono.task.service.JiraService.IssueInfo;
 import com.chrono.task.service.TaskService;
 import com.chrono.task.service.TimerService;
+import com.chrono.task.ui.ThemeManager;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import lombok.extern.slf4j.Slf4j;
@@ -120,6 +121,8 @@ public class MainController {
     private ComboBox<java.time.temporal.ChronoUnit> gitBackupUnitComboBox;
     @FXML
     private ComboBox<String> markdownFontComboBox;
+    @FXML
+    private ComboBox<String> uiThemeComboBox;
     @FXML
     private Label gitStatusLabel;
     @FXML
@@ -219,6 +222,7 @@ public class MainController {
             } else {
                 activeTaskLabel.setText("No Active Task");
             }
+            taskListView.refresh(); // highlight the active task
         });
 
         // Periodic UI update for timer (1 second)
@@ -418,6 +422,15 @@ public class MainController {
             markdownFontComboBox.setValue(settings.getMarkdownFont());
         }
 
+        if (uiThemeComboBox != null) {
+            uiThemeComboBox.getItems().setAll(ThemeManager.DARK, ThemeManager.LIGHT);
+            uiThemeComboBox.setValue(ThemeManager.isDark(settings.getUiTheme()) ? ThemeManager.DARK : ThemeManager.LIGHT);
+            // Live preview; persisted by "Save Settings"
+            uiThemeComboBox.valueProperty().addListener((_, _, newVal) -> applyTheme(newVal));
+        }
+        updatePreviewFill(ThemeManager.isDark());
+        showEmptyPreview();
+
         if (terminalShellField != null) {
             terminalShellField.setText(settings.getTerminalShell());
             terminalStartDirectoryField.setText(settings.getTerminalStartDirectory());
@@ -484,6 +497,7 @@ public class MainController {
         }
         settings.setGitBackupUnit(gitBackupUnitComboBox.getValue());
         settings.setMarkdownFont(markdownFontComboBox.getValue());
+        settings.setUiTheme(uiThemeComboBox.getValue());
 
         settings.setJiraRefreshEnabled(jiraRefreshEnabledCheckbox.isSelected());
         try {
@@ -576,6 +590,27 @@ public class MainController {
         }
     }
 
+    private void applyTheme(String uiTheme) {
+        ThemeManager.apply(uiThemeComboBox.getScene(), uiTheme);
+        updatePreviewFill(ThemeManager.isDark());
+        if (taskListView.getSelectionModel().getSelectedItem() == null) {
+            showEmptyPreview();
+        } else {
+            refreshMarkdown();
+        }
+    }
+
+    private void showEmptyPreview() {
+        markdownPreview.getEngine().loadContent("<html><head><style>"
+                + ThemeManager.markdownCss(ThemeManager.isDark(), "sans-serif")
+                + "</style></head><body></body></html>");
+    }
+
+    /** Background of the markdown WebView while/before the page is rendered (avoids a white flash in dark mode). */
+    private void updatePreviewFill(boolean dark) {
+        markdownPreview.setPageFill(dark ? javafx.scene.paint.Color.web("#0d1117") : javafx.scene.paint.Color.WHITE);
+    }
+
     /** Called when the application stops. */
     public void shutdown() {
         if (terminalPanel != null) {
@@ -633,6 +668,7 @@ private void showPopup(String title, String message) {
 
        alert.getDialogPane().setContent(textArea);
        alert.getDialogPane().setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+       ThemeManager.style(alert);
 
        alert.showAndWait();
    }
@@ -668,7 +704,7 @@ private void showPopup(String title, String message) {
             markdownEditor.setText("");
             dailyNoteArea.setText("");
             statusComboBox.setValue(null);
-            markdownPreview.getEngine().loadContent("");
+            showEmptyPreview();
             return;
         }
         descriptionField.setText(task.getDescription());
@@ -785,9 +821,9 @@ private void showPopup(String title, String message) {
                         // Add marker that we'll replace with edit icon after HTML rendering
                         //sb.append("## [EDIT-ICON:").append(date).append("] ")
                         String editIcon = "<span class='edit-icon' onclick='editDailyNote(\"" + date +
-                                "\")' style='cursor: pointer; color: #007bff; font-size: 1.2em; margin-right: 8px;' title='Edit this note'>&#9998;</span>";
+                                "\")' title='Edit this note'>&#9998;</span>";
                         sb.append(editIcon)
-                          .append(date).append(" (").append(durationStr).append(")\n\n");
+                          .append("<span class='daily-date'>").append(date).append(" (").append(durationStr).append(")</span>\n\n");
                         String note = work.getNote();
                         if(note != null && !note.isBlank()) {
                             sb.append(note).append("\n<hr>");
@@ -802,15 +838,7 @@ private void showPopup(String title, String message) {
             String fontBox = settings.getMarkdownFont();
             String fontFamily = (fontBox == null || "System".equals(fontBox)) ? "sans-serif" : "'" + fontBox + "'";
 
-            String styledHtml = "<html><head><style>" +
-                    "body { font-family: " + fontFamily
-                    + "; font-size: 14px; line-height: 1.6; color: #333; padding: 20px; }" +
-                    "code { font-family: monospace; background-color: #f4f4f4; padding: 2px 4px; border-radius: 4px; }"
-                    +
-                    "pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }" +
-                    "h1, h2, h3 { border-bottom: 1px solid #eee; padding-bottom: 5px; }" +
-                    "blockquote { border-left: 4px solid #ddd; padding-left: 15px; color: #777; }" +
-                    ".edit-icon:hover { color: #0056b3; text-decoration: underline; }" +
+            String styledHtml = "<html><head><style>" + ThemeManager.markdownCss(ThemeManager.isDark(), fontFamily) +
                     "</style></head><body>" + html + "</body></html>";
 
             Object scrollY = markdownPreview.getEngine().executeScript("window.pageYOffset || document.documentElement.scrollTop;");
@@ -894,6 +922,7 @@ private void showPopup(String title, String message) {
         grid.add(noteArea, 1, 2);
 
         dialog.getDialogPane().setContent(grid);
+        ThemeManager.style(dialog);
 
         // Convert the result when OK is clicked
         dialog.setResultConverter(dialogButton -> {
@@ -1137,10 +1166,12 @@ private void showPopup(String title, String message) {
             label.setMinWidth(0);
             HBox.setHgrow(label, Priority.ALWAYS);
 
-            statusLabel.setStyle("-fx-font-weight: bold; -fx-padding: 0 0 0 10;");
+            label.getStyleClass().add("task-label");
+            statusLabel.getStyleClass().add("status-pill");
             statusLabel.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
 
-            webButton.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 0;");
+            webButton.getStyleClass().add("icon-button");
+            webButton.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
             webButton.setFocusTraversable(false);
             webButton.setOnAction(event -> {
                 Task item = getItem();
@@ -1150,7 +1181,8 @@ private void showPopup(String title, String message) {
                 event.consume();
             });
 
-            slackButton.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 0;");
+            slackButton.getStyleClass().add("icon-button");
+            slackButton.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
             slackButton.setFocusTraversable(false);
             slackButton.setOnAction(event -> {
                 Task item = getItem();
@@ -1164,7 +1196,7 @@ private void showPopup(String title, String message) {
 
             // Bind HBox width to Cell width to ensure truncation works
             // Subtracting logic to account for padding/scrollbars
-            hbox.prefWidthProperty().bind(widthProperty().subtract(20));
+            hbox.prefWidthProperty().bind(widthProperty().subtract(40));
 
             setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && getItem() != null) {
@@ -1191,6 +1223,7 @@ private void showPopup(String title, String message) {
                                     item.setStatus(newStatus);
                                     boolean showStatus = newStatus != TaskStatus.NONE;
                                     statusLabel.setText(showStatus ? newStatus.name() : "");
+                                    setStatusStyle(newStatus);
                                     statusLabel.setVisible(showStatus);
                                     statusLabel.setManaged(showStatus);
                                     taskListView.refresh();
@@ -1277,12 +1310,13 @@ private void showPopup(String title, String message) {
             if (empty || item == null) {
                 setText(null);
                 setGraphic(null);
-                setStyle("");
+                getStyleClass().removeAll("new-auto", "task-active");
             } else {
                 setText(null);
                 label.setText(item.getLabel());
                 boolean showStatus = item.getStatus() != TaskStatus.NONE;
-                statusLabel.setText(showStatus ? item.getStatus().name() : "");
+                statusLabel.setText(showStatus ? item.getStatus().name().replace('_', ' ') : "");
+                setStatusStyle(item.getStatus());
                 statusLabel.setVisible(showStatus);
                 statusLabel.setManaged(showStatus);
                 boolean hasUrl = item.getJiraUrl() != null && !item.getJiraUrl().isBlank();
@@ -1293,12 +1327,20 @@ private void showPopup(String title, String message) {
                 slackButton.setManaged(hasSlack);
                 setGraphic(hbox);
 
-                // Apply different styling for auto-created tasks
-                if ("new_auto".equals(item.getTag())) {
-                    setStyle("-fx-background-color: #FFD17A; -fx-border-color: #FFD17A;");
-                } else {
-                    setStyle("");
+                // Highlight auto-created tasks and the task being timed (see app.css)
+                getStyleClass().removeAll("new-auto", "task-active");
+                if (item == timerService.activeTaskProperty().get()) {
+                    getStyleClass().add("task-active");
+                } else if ("new_auto".equals(item.getTag())) {
+                    getStyleClass().add("new-auto");
                 }
+            }
+        }
+
+        private void setStatusStyle(TaskStatus status) {
+            statusLabel.getStyleClass().removeIf(c -> c.startsWith("status-") && !c.equals("status-pill"));
+            if (status != null) {
+                statusLabel.getStyleClass().add("status-" + status.name().toLowerCase());
             }
         }
     }

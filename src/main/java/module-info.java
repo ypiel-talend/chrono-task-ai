@@ -14,6 +14,7 @@ module com.chrono.task {
     // pty4j (automatic module) needs the Kotlin stdlib, which is a named module and so is not
     // resolved unless a module requires it.
     requires kotlin.stdlib;
+    requires atlantafx.base;
 
     requires java.net.http;
     requires java.desktop;
@@ -28,4 +29,5 @@ module com.chrono.task {
     exports com.chrono.task.model;
     exports com.chrono.task.service;
     exports com.chrono.task.persistence;
+    exports com.chrono.task.ui;
 }
