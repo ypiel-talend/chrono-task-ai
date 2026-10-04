@@ -180,6 +180,7 @@ public class MainController {
     private final com.chrono.task.service.GitBackupService gitBackupService;
     private final com.chrono.task.service.JiraRefreshService jiraRefreshService;
 
+    private static final String APP_NAME = "Chrono Task AI";
     private static final String totalTimerFormat = "Total: %02d:%02d";
     private static final String monthlyTimerFormat = "30d: %02d:%02d";
     private static final String dailyTimerFormat = "Today: %02d:%02d:%02d";
@@ -975,6 +976,7 @@ private void showPopup(String title, String message) {
 
     private void updateTimerLabel() {
         Task current = timerService.activeTaskProperty().get();
+        java.time.Duration today = java.time.Duration.ZERO;
         if (current != null) {
             // Re-calculate total time from history including ongoing session is implied by
             // timerService tick
@@ -986,7 +988,7 @@ private void showPopup(String title, String message) {
             activeTimerLabel.setText(String.format(totalTimerFormat,
                     d.toHours(), d.toMinutesPart(), d.toSecondsPart()));
 
-            java.time.Duration today = current.getDurationToday();
+            today = current.getDurationToday();
             todayTimerLabel.setText(String.format(dailyTimerFormat,
                     today.toHours(), today.toMinutesPart(), today.toSecondsPart()));
 
@@ -1008,6 +1010,30 @@ private void showPopup(String title, String message) {
             totalDailyLabel.setText(String.format("Day Total: %02dh %02dm",
                     totalToday.toHours(), totalToday.toMinutesPart()));
         }
+
+        // Live window title (taskbar / Alt+Tab); only pushed to the window manager when it changes
+        String title = buildWindowTitle(current, timerService.isPaused(), today, totalToday);
+        if (taskListView.getScene() != null
+                && taskListView.getScene().getWindow() instanceof javafx.stage.Stage stage
+                && !title.equals(stage.getTitle())) {
+            stage.setTitle(title);
+        }
+    }
+
+    /**
+     * Window title showing the timer state. Minute resolution so it changes at most once a minute.
+     * The unicode symbols are rendered by the window manager, not JavaFX.
+     */
+    static String buildWindowTitle(Task active, boolean paused, java.time.Duration today,
+            java.time.Duration dayTotal) {
+        if (active == null) {
+            return String.format("%s · Day %02dh%02dm", APP_NAME, dayTotal.toHours(), dayTotal.toMinutesPart());
+        }
+        if (paused) {
+            return "⏸ Paused · " + active.getDisplayLabel() + " — " + APP_NAME;
+        }
+        return String.format("▶ %02d:%02d · %s — %s",
+                today.toHours(), today.toMinutesPart(), active.getDisplayLabel(), APP_NAME);
     }
 
     @FXML

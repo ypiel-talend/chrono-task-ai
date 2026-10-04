@@ -39,6 +39,7 @@ Single Maven module, JPMS module `com.chrono.task`. ~3k LOC. Commit messages are
 
 ## Key behaviours / data flow
 - **Locate active task**: target-icon button (SVGPath; emoji don't render in JavaFX on Linux) in the header → `onLocateActiveTask` (switches to Work tab, clears filter / shows done tasks if hidden, selects + scrolls to it).
+- **Window title**: live, set from `updateTimerLabel()` via static `MainController.buildWindowTitle` (unit tested): `▶ HH:MM · <task> — Chrono Task AI`, `⏸ Paused · …`, or `Chrono Task AI · Day XXhYYm` when idle; only re-set when the text changes.
 - **Start timer**: double-click a task cell → `timerService.setActiveTask` (also clears `new_auto` tag). Single click only selects/loads details.
 - **Editing**: text-field listeners write straight into the selected `Task` (no save button); persistence is by auto-save. Description field pasted with a Jira URL → fetch issue, replace description with summary, set jiraUrl/status/isJira.
 - **List view**: `applyFilters()` replaces `taskListView` items with a *filtered copy* of `taskService.getTasks()`; reorder (DnD) mutates the master list then re-applies filters. Beware index mismatch between filtered view and master list.
