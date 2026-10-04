@@ -237,10 +237,23 @@ public class MainController {
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
 
-        // Markdown Auto-Refresh (3 seconds)
-        Timeline markdownTimer = new Timeline(new KeyFrame(Duration.seconds(3), _ -> refreshMarkdown()));
+        // Markdown Auto-Refresh (3 seconds), only while a field of the markdown document is being edited
+        Timeline markdownTimer = new Timeline(new KeyFrame(Duration.seconds(3), _ -> {
+            if (markdownEditor.isFocused() || dailyNoteArea.isFocused()) {
+                refreshMarkdown();
+            }
+        }));
         markdownTimer.setCycleCount(Timeline.INDEFINITE);
         markdownTimer.play();
+
+        // Final refresh when leaving a markdown field, so the last edits are rendered
+        ChangeListener<Boolean> refreshOnBlur = (_, _, focused) -> {
+            if (!focused) {
+                refreshMarkdown();
+            }
+        };
+        markdownEditor.focusedProperty().addListener(refreshOnBlur);
+        dailyNoteArea.focusedProperty().addListener(refreshOnBlur);
 
         // Editor listeners to update model
         markdownEditor.textProperty().addListener((_, _, n) -> {
