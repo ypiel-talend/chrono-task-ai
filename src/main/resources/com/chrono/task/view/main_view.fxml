@@ -15,9 +15,11 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.web.WebView?>
 <BorderPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.chrono.task.controller.MainController">
@@ -26,6 +28,17 @@
             <children>
                 <Label fx:id="activeTaskLabel" text="No Active Task" styleClass="active-task" minWidth="0"
                        HBox.hgrow="SOMETIMES"/>
+                <Button fx:id="locateTaskButton" mnemonicParsing="false" onAction="#onLocateActiveTask"
+                        disable="true" styleClass="icon-button, locate-task-button" minWidth="-Infinity">
+                    <graphic>
+                        <!-- target icon: concentric rings drawn with the even-odd fill rule -->
+                        <SVGPath styleClass="locate-task-icon" fillRule="EVEN_ODD"
+                                 content="M 0 8 A 8 8 0 1 0 16 8 A 8 8 0 1 0 0 8 Z M 1.8 8 A 6.2 6.2 0 1 0 14.2 8 A 6.2 6.2 0 1 0 1.8 8 Z M 3.8 8 A 4.2 4.2 0 1 0 12.2 8 A 4.2 4.2 0 1 0 3.8 8 Z M 5.8 8 A 2.2 2.2 0 1 0 10.2 8 A 2.2 2.2 0 1 0 5.8 8 Z"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="Select the current task in the list"/>
+                    </tooltip>
+                </Button>
                 <Label fx:id="todayTimerLabel" text="-" styleClass="timer-today" minWidth="-Infinity"/>
                 <Label fx:id="monthTimerLabel" text="-" styleClass="timer-secondary" minWidth="-Infinity"/>
                 <Label fx:id="activeTimerLabel" text="-" styleClass="timer-secondary" minWidth="-Infinity"/>
@@ -39,9 +52,9 @@
         <!-- Terminal panel (Ctrl+F12) is added as a 2nd item by MainController.toggleTerminal() -->
         <SplitPane fx:id="mainSplitPane" orientation="VERTICAL" BorderPane.alignment="CENTER">
             <items>
-                <TabPane tabClosingPolicy="UNAVAILABLE" styleClass="main-tabs">
+                <TabPane fx:id="mainTabPane" tabClosingPolicy="UNAVAILABLE" styleClass="main-tabs">
                     <tabs>
-                        <Tab text="Work">
+                        <Tab fx:id="workTab" text="Work">
                             <content>
                                 <SplitPane dividerPositions="0.3">
                                     <items>

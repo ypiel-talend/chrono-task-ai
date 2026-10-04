@@ -61,6 +61,12 @@ public class MainController {
     @FXML
     private javafx.scene.control.Button pauseButton;
     @FXML
+    private Button locateTaskButton;
+    @FXML
+    private javafx.scene.control.TabPane mainTabPane;
+    @FXML
+    private javafx.scene.control.Tab workTab;
+    @FXML
     private TextField filterField;
     @FXML
     private javafx.scene.control.CheckBox showDoneTasksCheckbox;
@@ -453,6 +459,7 @@ public class MainController {
                             .then("Resume")
                             .otherwise("Pause"));
         }
+        locateTaskButton.disableProperty().bind(timerService.activeTaskProperty().isNull());
 
         // Status Bar Bindings
         taskService.lastSaveTimeProperty().addListener((_, _, newVal) -> {
@@ -1001,6 +1008,25 @@ private void showPopup(String title, String message) {
             totalDailyLabel.setText(String.format("Day Total: %02dh %02dm",
                     totalToday.toHours(), totalToday.toMinutesPart()));
         }
+    }
+
+    @FXML
+    public void onLocateActiveTask() {
+        Task active = timerService.activeTaskProperty().get();
+        if (active == null) {
+            return;
+        }
+        mainTabPane.getSelectionModel().select(workTab);
+        if (!taskListView.getItems().contains(active)) {
+            // Hidden by the text filter and/or the "show completed" checkbox (listeners re-apply filters)
+            filterField.setText("");
+            if (!taskListView.getItems().contains(active)) {
+                showDoneTasksCheckbox.setSelected(true);
+            }
+        }
+        taskListView.getSelectionModel().select(active);
+        taskListView.scrollTo(active);
+        taskListView.requestFocus();
     }
 
     @FXML

@@ -49,6 +49,22 @@
     -fx-font-weight: bold;
 }
 
+.header-bar .locate-task-button {
+    -fx-padding: 4;
+}
+
+.header-bar .locate-task-button .locate-task-icon {
+    -fx-fill: white;
+}
+
+.header-bar .locate-task-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.18);
+}
+
+.header-bar .locate-task-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.30);
+}
+
 .header-bar .pause-button {
     -fx-background-color: rgba(255, 255, 255, 0.15);
     -fx-border-color: rgba(255, 255, 255, 0.35);
