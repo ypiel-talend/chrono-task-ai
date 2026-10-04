@@ -11,11 +11,10 @@ public class NotificationService {
         if (SystemTray.isSupported()) {
             SystemTray tray = SystemTray.getSystemTray();
 
-            // We need an image for the tray icon. For now, we'll use a blank transparent
-            // image
-            // or a placeholder if available. Java doesn't easily let us use app icons here
-            // without a file path.
-            Image image = Toolkit.getDefaultToolkit().createImage(new byte[0]);
+            var iconUrl = NotificationService.class.getResource("/com/chrono/task/icons/app-icon-32.png");
+            Image image = iconUrl != null
+                    ? Toolkit.getDefaultToolkit().createImage(iconUrl)
+                    : Toolkit.getDefaultToolkit().createImage(new byte[0]);
 
             this.trayIcon = new TrayIcon(image, "Chrono Task AI");
             this.trayIcon.setImageAutoSize(true);

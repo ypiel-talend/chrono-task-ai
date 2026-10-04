@@ -7,7 +7,7 @@ Single Maven module, JPMS module `com.chrono.task`. ~3k LOC. Commit messages are
 - Toolchain: JDK 27 (sdkman), Maven 3.9. `maven.compiler.release=27`, **`--enable-preview` everywhere** (compiler, javafx:run, surefire).
 - `mvn clean verify` — build + tests. `mvn test -Dtest=TaskServiceTest` — single test.
 - `mvn javafx:run` — launch the app (main class `com.chrono.task.ChronoApp`, uses instance-main style `static void main()`).
-- Use a throwaway settings file to avoid touching real data: `-Dchronotaskai.settings.file=/tmp/x.json` (see commented option in pom).
+- Use a throwaway settings file to avoid touching real data: `-Dchronotaskai.settings.file=/tmp/x.json` — must be enabled via the commented `<option>` in the pom's javafx-maven-plugin config; passing `-D…` to `mvn javafx:run` does **not** reach the forked JVM (real settings/data get used).
 - Logs: console + `logs/chrono-task.log` (relative to CWD); `com.chrono.task` at DEBUG.
 - TerminalFX is **not on Maven Central**: the pom declares the `terminalfx` repository (`https://github.com/javaterminal/TerminalFX/raw/master/releases`).
 - `javafx:run` options include `--enable-native-access=javafx.graphics,javafx.web,com.sun.jna` (JDK 27 warns otherwise).
@@ -34,6 +34,7 @@ Single Maven module, JPMS module `com.chrono.task`. ~3k LOC. Commit messages are
 | `ui/ThemeManager` | Look & feel: AtlantaFX Primer dark/light as user-agent stylesheet (global, dialogs included) + `view/app.css`; root class `theme-dark`/`theme-light`; `markdownCss(dark, font)` builds the WebView preview CSS. `style(Dialog)` for dialogs. |
 | `controller/TerminalPanel` | Bottom terminal panel (Ctrl+F12): `TabPane` of TerminalFX `TerminalView` + `TerminalSession(LocalShell)` per tab, "+"/"✕" toolbar, clipboard wiring (`onCopy`/`onPasteRequested`), `applySettings()` (live look), `closeAll()`. Static `buildLook`/`buildShellSpec` map `Settings` → TerminalFX (unit tested). |
 | `resources/com/chrono/task/view/app.css` | App styling on top of AtlantaFX; only AtlantaFX looked-up colors (`-color-*`) so one file serves both themes. Classes: `header-bar`, `timer-*`, `task-list` (+ cell `new-auto`/`task-active`), `status-pill status-<status>`, `icon-button`, `card`, `section-title`, `status-bar`… |
+| `resources/com/chrono/task/icons/` | App icon: `app-icon.svg` (source, renders 32–512 px) + `app-icon-small.svg` (bolder variant for 16/24 px) → `app-icon-<size>.png` (re-render with `inkscape X.svg --export-type=png -w N -h N -o app-icon-N.png`). Loaded into `stage.getIcons()` in `ChronoApp` and as the tray icon in `NotificationService`. |
 | `resources/com/chrono/task/view/main_view.fxml` | Whole UI: top timer bar, TabPane (Work / History / Settings), bottom status bar. `fx:id`s map 1:1 to `@FXML` fields in MainController. |
 | `module-info.java` | Must `opens` packages to javafx.fxml / jackson; add `requires` for any new library. |
 

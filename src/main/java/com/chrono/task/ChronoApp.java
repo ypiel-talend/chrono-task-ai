@@ -90,6 +90,12 @@ public class ChronoApp extends Application {
         com.chrono.task.ui.ThemeManager.apply(scene, settings.getUiTheme());
         stage.setScene(scene);
         stage.setTitle("Chrono Task AI");
+        // All sizes, so the window manager picks the best one (taskbar, Alt-Tab, title bar)
+        for (int size : new int[] { 16, 24, 32, 48, 64, 128, 256, 512 }) {
+            var icon = ChronoApp.class.getResourceAsStream("icons/app-icon-" + size + ".png");
+            if (icon != null)
+                stage.getIcons().add(new javafx.scene.image.Image(icon));
+        }
         stage.setMinWidth(800);
         stage.setMinHeight(500);
         stage.show();
