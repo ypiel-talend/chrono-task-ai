@@ -3,6 +3,8 @@
 JavaFX desktop app: daily task list + per-day time tracking + markdown notes + Jira sync + git backup of data.
 Single Maven module, JPMS module `com.chrono.task`. ~3k LOC. Commit messages are prefixed `[AI]`, `[Human]`, `[GH Copilot]`… — use `[AI]`.
 
+**Git: never run `git add` or `git commit` on your own.** Leave changes unstaged in the working tree; the user reviews and commits. Only stage/commit when the user explicitly asks in the current request.
+
 ## Build / run / test
 - Toolchain: JDK 27 (sdkman), Maven 3.9. `maven.compiler.release=27`, **`--enable-preview` everywhere** (compiler, javafx:run, surefire).
 - `mvn clean verify` — build + tests. `mvn test -Dtest=TaskServiceTest` — single test.
