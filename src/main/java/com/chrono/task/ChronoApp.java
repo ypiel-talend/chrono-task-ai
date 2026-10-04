@@ -96,6 +96,8 @@ public class ChronoApp extends Application {
             if (icon != null)
                 stage.getIcons().add(new javafx.scene.image.Image(icon));
         }
+        // GNOME ignores the window icon: it needs a .desktop file matching the window class
+        com.chrono.task.ui.DesktopIntegration.registerIfGnome();
         stage.setMinWidth(800);
         stage.setMinHeight(500);
         stage.show();
